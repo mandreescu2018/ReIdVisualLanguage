@@ -11,13 +11,15 @@ from losses.triplet_loss import TripletLoss
 from losses.center_loss  import CenterLoss
 
 B, D, C = 16, 128, 50   # small dims for speed
+P, K = 4, 4             # P identities × K images each (required by hard_example_mining)
 
 
 @pytest.fixture
 def batch():
-    return (torch.randn(B, D),          # feats
-            torch.randint(0, C, (B,)),  # labels
-            torch.randn(B, C))          # logits
+    labels = torch.repeat_interleave(torch.arange(P), K)  # [0,0,0,0, 1,1,1,1, ...]
+    return (torch.randn(B, D),   # feats
+            labels,              # balanced P×K labels
+            torch.randn(B, C))  # logits
 
 
 def test_cross_entropy(batch):
@@ -34,13 +36,13 @@ def test_label_smooth_ce(batch):
 
 def test_triplet_hard(batch):
     feats, labels, _ = batch
-    loss = TripletLoss(margin=0.3, hard_mining=True)(feats, labels)
+    loss, _, _ = TripletLoss(margin=0.3)(feats, labels)
     assert loss.item() >= 0
 
 
 def test_triplet_soft_margin(batch):
     feats, labels, _ = batch
-    loss = TripletLoss(soft_margin=True)(feats, labels)
+    loss, _, _ = TripletLoss(margin=None)(feats, labels)
     assert loss.item() >= 0
 
 

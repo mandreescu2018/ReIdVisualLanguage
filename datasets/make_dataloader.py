@@ -30,26 +30,14 @@ class CustomCollate:
         else:
             return torch.tensor(object, dtype=torch.int64)
 
-    def train_collate_fn(self, batch):
-        
-        imgs, pids, camids, viewids, img_paths = zip(*batch)
-        
-        imgs = self.apply_transform(imgs, image=True)
-        pids = self.apply_transform(pids)
-        camids = self.apply_transform(camids)
-        viewids = self.apply_transform(viewids)
-
-        return imgs, pids, camids, viewids, img_paths
-
-    def val_collate_fn(self, batch):
-        imgs, pids, camids, viewids, img_paths = zip(*batch)
-        
-        imgs = self.apply_transform(imgs, image=True)
-        pids = self.apply_transform(pids)
-        camids = self.apply_transform(camids)
-        viewids = self.apply_transform(viewids)
-
-        return imgs, pids, camids, viewids, img_paths
+    def collate_fn(self, batch):
+        imgs, pids, camids, viewids = zip(*batch)
+        return (
+            self.apply_transform(imgs, image=True),
+            self.apply_transform(pids),
+            self.apply_transform(camids),
+            self.apply_transform(viewids),
+        )
 
 class ReIDDataLoader:
     __factory = {
@@ -101,7 +89,7 @@ class ReIDDataLoader:
             batch_size=self.cfg.SOLVER.IMS_PER_BATCH,
             num_workers=self.num_workers,
             sampler=RandomIdentitySampler(self.train_dataset.train.itertuples(index=False, name=None), self.cfg.SOLVER.IMS_PER_BATCH, self.cfg.DATALOADER.NUM_INSTANCE),
-            collate_fn=self.custom_collate.train_collate_fn,
+            collate_fn=self.custom_collate.collate_fn,
         )
 
     @property
@@ -111,7 +99,7 @@ class ReIDDataLoader:
             batch_size=self.cfg.TEST.IMS_PER_BATCH, 
             shuffle=False,   
             num_workers=self.num_workers,
-            collate_fn=self.custom_collate.val_collate_fn
+            collate_fn=self.custom_collate.collate_fn
         )
 
     @property

@@ -18,7 +18,7 @@ class ImageDataset(Dataset):
             img_path, pid, camid, trackid = self.dataframe.loc[index, feature_columns].values
             img = self.read_image(img_path)
             img = self.transform(img)
-            return img, pid, camid, trackid, img_path.split('/')[-1]
+            return img, pid, camid, trackid
         
         @staticmethod
         def read_image(img_path):
