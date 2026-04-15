@@ -34,8 +34,6 @@ class ProcessorBase:
         self.live_values = MetricsLiveValues(cfg)
         self.live_values.train_loader_length = len(train_loader)
         self.composite_logger = CompositeLogger(cfg)
-        self.patch_centers = kwargs.get("patch_centers", None)
-        self.pc_criterion = kwargs.get("pc_criterion", None)
     
     def train(self):
         self.composite_logger.info('Start training')

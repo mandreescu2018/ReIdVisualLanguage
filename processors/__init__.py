@@ -1,1 +1,1 @@
-from .processor_selector import get_processor
+from .processor_standard import ProcessorStandard

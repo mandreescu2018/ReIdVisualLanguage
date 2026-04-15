@@ -34,31 +34,31 @@ class ProcessorStandard(ProcessorBase):
         self.model.train()
         for n_iter, batch in enumerate(self.train_loader):
             self.zero_grading()
-            
+
             inputs = tuple(batch[i].to(self.device) for i in self.config.INPUT.TRAIN_KEYS)
             target = batch[1].to(self.device)
-            
+
             with amp.autocast(self.device):
                 outputs = self.model(*inputs)
                 loss = self.loss_fn(outputs, target)
             self.scaler.scale(loss).backward()
             self.scaler.step(self.optimizer)
-            self.scaler.update()
 
             if self.optimizer_center is not None:
+                center_loss_item = next(
+                    (item for item in self.loss_fn.loss_functions if "CenterLoss" in item.__class__.__name__),
+                    None,
+                )
+                if center_loss_item is None:
+                    raise ValueError("CenterLoss not found in loss functions")
+                inv_weight = 1.0 / center_loss_item.weight
                 for param in self.center_criterion.parameters():
-                    center_loss_item = next((item for item in self.loss_fn.loss_functions if "CenterLoss" in item.__class__.__name__), None)
-                    if center_loss_item is not None:
-                        center_weight = center_loss_item.weight
-                    else:
-                        raise ValueError("CenterLoss not found in loss functions")
-                    param.grad.data *= (1. / center_weight)
+                    param.grad.data *= inv_weight
                 self.scaler.step(self.optimizer_center)
-                self.scaler.update()
-            
+
+            self.scaler.update()
+
             self.live_values.update(loss, outputs, target)
-            
-            torch.cuda.synchronize()
             self.log_training_details(n_iter)
             
 

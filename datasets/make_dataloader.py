@@ -45,10 +45,11 @@ class CustomCollate:
         imgs, pids, camids, viewids, img_paths = zip(*batch)
         
         imgs = self.apply_transform(imgs, image=True)
-        camids_tensor = self.apply_transform(camids)
+        pids = self.apply_transform(pids)
+        camids = self.apply_transform(camids)
         viewids = self.apply_transform(viewids)
 
-        return imgs, pids, camids, camids_tensor, viewids, img_paths
+        return imgs, pids, camids, viewids, img_paths
 
 class ReIDDataLoader:
     __factory = {
