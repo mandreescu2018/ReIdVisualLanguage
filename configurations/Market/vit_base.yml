@@ -25,9 +25,9 @@ SOLVER:
   WARMUP_ITERS: 5
   WARMUP_METHOD: 'linear'
 
-PROCESSOR: 
-  # INPUT_KEYS: 4
-  TARGET_KEY: 1
+# PROCESSOR: 
+#   # INPUT_KEYS: 4
+#   TARGET_KEY: 1
 
 LOSS:
   ID_LOSS_TYPE: 'cross_entropy'
