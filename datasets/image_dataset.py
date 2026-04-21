@@ -15,7 +15,7 @@ class ImageDataset(Dataset):
 
         def __getitem__(self, index):
             feature_columns = ['img_path', 'pid', 'camid', 'trackid']
-            img_path, pid, camid, trackid = self.dataframe.loc[index, feature_columns].values
+            img_path, pid, camid, trackid = self.dataframe.iloc[index][feature_columns].values
             img = self.read_image(img_path)
             img = self.transform(img)
             return img, pid, camid, trackid

@@ -54,7 +54,7 @@ class vit_builder_base(nn.Module):
     
     def _init_bottleneck_layers(self, num_layers=5):
         """ Initialize bottleneck layers for the model. """
-        self.bottlenecks = []
+        self.bottlenecks = nn.ModuleList()
         for _ in range(num_layers):
             bottleneck = nn.BatchNorm1d(self.in_planes)
             bottleneck.bias.requires_grad_(False)

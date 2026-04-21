@@ -40,10 +40,11 @@ class ModelLoader:
     @property
     def checkpoint(self):
         if self._checkpoint is None:
+            map_location = DeviceManager.get_device()
             if self.cfg.MODEL.PRETRAIN_CHOICE == 'resume':
-                self._checkpoint = torch.load(self.cfg.MODEL.PRETRAIN_PATH)
+                self._checkpoint = torch.load(self.cfg.MODEL.PRETRAIN_PATH, map_location=map_location)
             elif self.cfg.MODEL.PRETRAIN_CHOICE == 'test' or self.cfg.MODEL.PRETRAIN_CHOICE == 'cross_domain':
-                self._checkpoint = torch.load(self.cfg.TEST.WEIGHT, weights_only=True)
+                self._checkpoint = torch.load(self.cfg.TEST.WEIGHT, map_location=map_location, weights_only=True)
         return self._checkpoint
 
     @property
@@ -97,21 +98,29 @@ class ModelLoader:
             self.model.state_dict()[i].copy_(param_dict[i])
 
     def load_param(self):
-        
+        model = self.model
+
         if self.cfg.MODEL.PRETRAIN_CHOICE == 'resume':
-            self._model.load_state_dict(self.checkpoint['model_state_dict'])
-            self._optimizer.load_state_dict(self.checkpoint['optimizer_state_dict'])
+            model.load_state_dict(self.checkpoint['model_state_dict'])
+            if self._optimizer is not None:
+                self._optimizer.load_state_dict(self.checkpoint['optimizer_state_dict'])
             optimizer_center_state_dict = self.checkpoint.get('optimizer_center_state_dict', None)
-            if optimizer_center_state_dict is not None:
+            center_criterion_state_dict = self.checkpoint.get('center_criterion_state_dict', None)
+            if (
+                optimizer_center_state_dict is not None
+                and center_criterion_state_dict is not None
+                and self._optimizer_center is not None
+                and self._center_criterion is not None
+            ):
                 self._optimizer_center.load_state_dict(optimizer_center_state_dict)
-                self._center_criterion.load_state_dict(self.checkpoint['center_criterion_state_dict'])
-            self._optimizer.load_state_dict(self.checkpoint['optimizer_state_dict'])
-            self._scheduler.load_state_dict(self.checkpoint['scheduler_state_dict'])
+                self._center_criterion.load_state_dict(center_criterion_state_dict)
+            if self._scheduler is not None:
+                self._scheduler.load_state_dict(self.checkpoint['scheduler_state_dict'])
         elif self.cfg.MODEL.PRETRAIN_CHOICE == 'test':
             if 'model_state_dict' not in self.checkpoint:
-                self.model.load_state_dict(self.checkpoint)
+                model.load_state_dict(self.checkpoint)
             else:
-                self.model.load_state_dict(self.checkpoint['model_state_dict'])
+                model.load_state_dict(self.checkpoint['model_state_dict'])
             # self.model.load_state_dict(self.checkpoint)
         elif self.cfg.MODEL.PRETRAIN_CHOICE == 'cross_domain':
             if 'model_state_dict' not in self.checkpoint:

@@ -10,6 +10,10 @@ import argparse
 import sys
 from pathlib import Path
 
+import torch
+
+
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from config import cfg
@@ -20,6 +24,7 @@ from processors.processor_standard import ProcessorStandard
 from solver import LearningRateScheduler
 from solver.make_optimizer import OptimizerFactory
 from utils import set_seeds
+from utils.device_manager import DeviceManager
 from functional_logging.stream_logger import StreamLogger
 
 
@@ -34,6 +39,7 @@ def main():
     if args.config_file:
         cfg.merge_from_file(args.config_file)
 
+    DeviceManager.set_device(cfg.MODEL.DEVICE)
     set_seeds(cfg.SOLVER.SEED)
 
     stream_logger = StreamLogger(cfg=cfg)
@@ -53,12 +59,20 @@ def main():
 
     # Model
     model_loader = ModelLoader(cfg)
+    model = model_loader.model
 
     # Losses
     composed_loss = LossComposer(cfg)
+    model_loader.center_criterion = composed_loss.center_criterion
+    if model_loader.center_criterion is not None:
+        model_loader.optimizer_center = torch.optim.SGD(
+            model_loader.center_criterion.parameters(),
+            lr=cfg.SOLVER.CENTER_LR,
+        )
+
 
     # Optimizer & scheduler
-    optimizer = OptimizerFactory(cfg, model_loader.model).make_optimizer()
+    optimizer = OptimizerFactory(cfg, model).make_optimizer()
     scheduler = LearningRateScheduler(optimizer, cfg)
 
     model_loader.optimizer = optimizer
@@ -68,14 +82,14 @@ def main():
     # Processor (train + eval loop)
     proc = ProcessorStandard(
         cfg,
-        model_loader.model,
+        model,
         train_loader,
         test_loader,
-        model_loader.optimizer,
+        optimizer,
         model_loader.optimizer_center,
         model_loader.center_criterion,
         composed_loss,
-        model_loader.scheduler,
+        scheduler,
         start_epoch=model_loader.start_epoch,
     )
     proc.train()
