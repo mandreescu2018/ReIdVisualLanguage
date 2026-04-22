@@ -54,7 +54,7 @@ class vit_builder_base(nn.Module):
     
     def _init_bottleneck_layers(self, num_layers=5):
         """ Initialize bottleneck layers for the model. """
-        self.bottlenecks = nn.ModuleList()
+        self.bottlenecks = []
         for _ in range(num_layers):
             bottleneck = nn.BatchNorm1d(self.in_planes)
             bottleneck.bias.requires_grad_(False)
@@ -92,7 +92,7 @@ class vit_builder_base(nn.Module):
 class build_transformer(vit_builder_base):
     def __init__(self, cfg):
         super(build_transformer, self).__init__(cfg)
-        self.gap = nn.AdaptiveAvgPool2d(1) # - unnecessary ?
+        # self.gap = nn.AdaptiveAvgPool2d(1) # - unnecessary ?
         
         self.ID_LOSS_TYPE = cfg.LOSS.ID_LOSS_TYPE
 
