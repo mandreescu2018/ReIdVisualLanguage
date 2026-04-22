@@ -1,39 +1,40 @@
 import os
 import torch
+from torch import amp
+from dataclasses import dataclass, field
 from utils.device_manager import DeviceManager
 from .metrics_values import MetricsLiveValues
 from functional_logging import CompositeLogger
 from config.constants import *
 
-    
-class ProcessorBase:
-    def __init__(self, cfg,                   
-                 model,                                   
-                 train_loader,
-                 val_loader,                  
-                 optimizer=None,
-                 optimizer_center=None,
-                 center_criterion=None,                 
-                 loss_fn=None,
-                 scheduler=None,
-                 start_epoch=0,
-                 **kwargs):
+
+@dataclass
+class TrainerConfig:
+    model = None
+    train_loader = None
+    val_loader = None
+    optimizer = None
+    scheduler = None
+    loss_fn = None
+    start_epoch: int = 0
+
+class BaseTrainer:
+    def __init__(self, cfg, train_cfg: TrainerConfig):               
         self.config = cfg
-        self.model = model      
-        self.train_loader = train_loader
-        self.val_loader = val_loader
-        self.optimizer = optimizer
-        self.optimizer_center = optimizer_center
-        self.center_criterion = center_criterion
-        self.loss_fn = loss_fn
-        self.scheduler = scheduler
-        self.start_epoch = start_epoch
+        self.model = train_cfg.model      
+        self.train_loader = train_cfg.train_loader
+        self.val_loader = train_cfg.val_loader
+        self.optimizer = train_cfg.optimizer
+        self.loss_fn = train_cfg.loss_fn
+        self.scheduler = train_cfg.scheduler
+        self.start_epoch = train_cfg.start_epoch
 
         self.max_epochs = cfg.SOLVER.MAX_EPOCHS
         self.device = DeviceManager.get_device().type
         self.live_values = MetricsLiveValues(cfg)
-        self.live_values.train_loader_length = len(train_loader)
+        self.live_values.train_loader_length = len(train_cfg.train_loader)
         self.composite_logger = CompositeLogger(cfg)
+        self.scaler = amp.GradScaler(self.device)
     
     def train(self):
         self.composite_logger.info('Start training')
@@ -75,8 +76,8 @@ class ProcessorBase:
 
     def zero_grading(self):
         self.optimizer.zero_grad()
-        if self.optimizer_center is not None:
-            self.optimizer_center.zero_grad()
+        # if self.optimizer_center is not None:
+        #     self.optimizer_center.zero_grad()
 
     def inference(self):        
         self.live_values.reset_metrics()
@@ -108,8 +109,8 @@ class ProcessorBase:
                 'epoch': self.live_values.current_epoch,
                 'model_state_dict': self.model.state_dict(),
                 'optimizer_state_dict': self.optimizer.state_dict(),
-                'center_criterion_state_dict': self.center_criterion.state_dict() if self.center_criterion is not None else None,
-                'optimizer_center_state_dict': self.optimizer_center.state_dict() if self.optimizer_center is not None else None,
+                # 'center_criterion_state_dict': self.center_criterion.state_dict() if self.center_criterion is not None else None,
+                # 'optimizer_center_state_dict': self.optimizer_center.state_dict() if self.optimizer_center is not None else None,
                 'scheduler_state_dict': self.scheduler.state_dict(),
                 }, path)
         

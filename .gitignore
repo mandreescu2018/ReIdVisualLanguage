@@ -3,9 +3,7 @@ models/heads/__pycache__/*
 models/necks/__pycache__/*
 losses/__pycache__/*
 tests/__pycache__/*
-weights_pretrained/jx_vit_base_p16_224-80ecf9dd.pth
-weights_pretrained/model_transreid.pth
-weights_pretrained/resnet50-19c8e357.pth
+weights_pretrained/*
 losses/__pycache__/*
 config/__pycache__/*
 datasets/__pycache__/*
@@ -25,3 +23,5 @@ solver/__pycache__/*
 utils/__pycache__/*
 logs/market_vit_base_test/*
 config/__pycache__/*
+config/__pycache__/__init__.cpython-310.pyc
+config/__pycache__/defaults.cpython-310.pyc

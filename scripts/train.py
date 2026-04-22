@@ -20,7 +20,7 @@ from config import cfg
 from datasets import ReIDDataLoader
 from losses import ComposedLosses
 from models import ModelLoader
-from processors.processor_standard import ProcessorStandard
+from engine import ImageFeatureTrainer, TrainerConfig
 from solver import LearningRateScheduler
 from solver.make_optimizer import OptimizerFactory
 from utils import set_seeds
@@ -78,20 +78,20 @@ def main():
     model_loader.scheduler = scheduler
     model_loader.load_param()
 
-    # Processor (train + eval loop)
-    proc = ProcessorStandard(
-        cfg,
-        model,
-        train_loader,
-        test_loader,
-        optimizer,
-        model_loader.optimizer_center,
-        model_loader.center_criterion,
-        composed_loss,
-        scheduler,
-        start_epoch=model_loader.start_epoch,
+    trainer_cfg = TrainerConfig()
+    trainer_cfg.model = model
+    trainer_cfg.train_loader = train_loader
+    trainer_cfg.val_loader = test_loader
+    trainer_cfg.optimizer = optimizer
+    trainer_cfg.scheduler = scheduler
+    trainer_cfg.loss_fn = composed_loss
+    trainer_cfg.start_epoch = model_loader.start_epoch
+    
+    # Train on images
+    image_trainer = ImageFeatureTrainer(cfg,
+        trainer_cfg
     )
-    proc.train()
+    image_trainer.train()
 
 
 if __name__ == "__main__":

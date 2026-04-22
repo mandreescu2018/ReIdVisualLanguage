@@ -40,15 +40,5 @@ class MetricsLiveValues:
 
         return acc 
 
-class MetricsLiveValuesDG(MetricsLiveValues):
-    def __init__(self, cfg):
-        super().__init__(cfg)
-        self.pc_loss_meter = AverageMeter()
-    
-    def reset_metrics(self):
-        super().reset_metrics()
-        self.pc_loss_meter.reset()
-    
-    # def update(self, loss, outputs, target, accuracy=None):
 
 

@@ -1,15 +1,17 @@
 import torch
-from torch import amp
-from.processor_base import ProcessorBase
+import torch.amp as amp
+
+from.trainer_base import BaseTrainer
 from utils import timed
 import time
 import os
+from config.constants import *
 
-class ProcessorStandard(ProcessorBase):
+class ImageFeatureTrainer(BaseTrainer):
 
     def train(self):
-         super(ProcessorStandard, self).train()         
-         self.scaler = amp.GradScaler(self.device)
+         super(ImageFeatureTrainer, self).train()         
+         
 
          for epoch in range(self.start_epoch+1, self.max_epochs+1):
                 
@@ -36,7 +38,7 @@ class ProcessorStandard(ProcessorBase):
             self.zero_grading()
 
             inputs = tuple(batch[i].to(self.device) for i in self.config.INPUT.TRAIN_KEYS)
-            target = batch[1].to(self.device)
+            target = batch[PID_INDEX].to(self.device)
 
             if self.device == "cpu":
                 outputs = self.model(*inputs)
@@ -49,17 +51,7 @@ class ProcessorStandard(ProcessorBase):
                     loss = self.loss_fn(outputs, target)
                 self.scaler.scale(loss).backward()
                 self.scaler.step(self.optimizer)
-
-            if self.optimizer_center is not None:
-                center_loss_wrapper = self.loss_fn.center_loss_wrapper
-                if center_loss_wrapper is None:
-                    raise ValueError("CenterLoss not found in loss functions")
-                inv_weight = 1.0 / center_loss_wrapper.weight
-                for param in self.center_criterion.parameters():
-                    param.grad.data *= inv_weight
-                self.scaler.step(self.optimizer_center)
-
-            self.scaler.update()
+                self.scaler.update()
 
             self.live_values.update(loss, outputs, target)
             self.log_training_details(n_iter)
