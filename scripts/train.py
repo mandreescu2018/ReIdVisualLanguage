@@ -70,7 +70,6 @@ def main():
             lr=cfg.SOLVER.CENTER_LR,
         )
 
-
     # Optimizer & scheduler
     optimizer = OptimizerFactory(cfg, model).make_optimizer()
     scheduler = LearningRateScheduler(optimizer, cfg)

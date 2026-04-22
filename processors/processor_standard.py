@@ -51,13 +51,10 @@ class ProcessorStandard(ProcessorBase):
                 self.scaler.step(self.optimizer)
 
             if self.optimizer_center is not None:
-                center_loss_item = next(
-                    (item for item in self.loss_fn.loss_functions if "CenterLoss" in item.__class__.__name__),
-                    None,
-                )
-                if center_loss_item is None:
+                center_loss_wrapper = self.loss_fn.center_loss_wrapper
+                if center_loss_wrapper is None:
                     raise ValueError("CenterLoss not found in loss functions")
-                inv_weight = 1.0 / center_loss_item.weight
+                inv_weight = 1.0 / center_loss_wrapper.weight
                 for param in self.center_criterion.parameters():
                     param.grad.data *= inv_weight
                 self.scaler.step(self.optimizer_center)

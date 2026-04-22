@@ -13,6 +13,10 @@ class BaseLoss:
         self.margin = cfg.get("margin", None)
         self.loss = None
     
+    @property
+    def is_center_loss(self):
+        """Identify if this loss wrapper manages a center criterion."""
+        return False
 
     def __call__(self, outputs, target):
         return self.compute(outputs, target) * self.weight
@@ -24,9 +28,14 @@ class CenterLossWrap(BaseLoss):
         self.feature_dim = feature_dim
         self.loss = CenterLoss(self.num_classes, self.feature_dim)
     
+    @property
+    def is_center_loss(self):
+        """Identify if this loss wrapper manages a center criterion."""
+        return True
+    
     def compute(self, outputs, target):
         feat = outputs[self.output_index]
-        return self.loss(feat, target) * self.weight
+        return self.loss(feat, target)
 
 class TripletLossWrap(BaseLoss):
     def __init__(self, cfg) -> None:
@@ -41,7 +50,7 @@ class TripletLossWrap(BaseLoss):
             loss = 0.5 * loss + 0.5 * self.loss(feat[0], target)[0]
         else:
             loss = self.loss(feat, target)[0]
-        return loss * self.weight
+        return loss
 
 class CrossEntropyLossWrap(BaseLoss):
     def __init__(self, cfg, num_classes) -> None:
@@ -69,7 +78,7 @@ class CrossEntropyLossWrap(BaseLoss):
             loss = 0.5 * loss + 0.5 * self.loss(score[0], target)
         else:
             loss = self.loss(score, target)
-        return loss * self.weight
+        return loss
 
 class LossFactory:
     @staticmethod
@@ -104,6 +113,7 @@ class ComposedLosses:
         """
         self.config = cfg
         self._center_criterion = None
+        self._center_loss_wrapper = None
         self.loss_functions = []
 
         loss_configs  = cfg.LOSS.COMPONENTS
@@ -113,18 +123,19 @@ class ComposedLosses:
 
         for loss_conf in loss_configs:
             loss_fn = LossFactory.create_loss(loss_conf, num_classes, feature_dim)
-            if loss_conf["type"] == "center":
-                self.set_center_criterion(loss_fn)
+            if loss_fn.is_center_loss:
+                self._center_loss_wrapper = loss_fn
+                self._center_criterion = loss_fn.loss
             self.loss_functions.append(loss_fn)            
-            # else:
-            #     self.loss_functions.append(loss_fn)            
 
     @property
     def center_criterion(self):
         return self._center_criterion
     
-    def set_center_criterion(self, loss_fn):
-        self._center_criterion = loss_fn.loss
+    @property
+    def center_loss_wrapper(self):
+        """Return the center loss wrapper if present, else None."""
+        return self._center_loss_wrapper
     
     def __call__(self, outputs, targets):
         """
@@ -139,7 +150,7 @@ class ComposedLosses:
         """
         total_loss = 0.0
         for loss_fn in self.loss_functions:
-            total_loss += loss_fn.compute(outputs, targets)
+            total_loss += loss_fn(outputs, targets)
         return total_loss
 
 
