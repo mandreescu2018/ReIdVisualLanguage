@@ -53,14 +53,14 @@ class part_Attention(nn.Module):
         B, N, C = x.shape
         qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
         q, k, v = qkv[0], qkv[1], qkv[2]   # make torchscript happy (cannot use tensor as tuple)
-        # add mask to q k v
-        mask = mask.to(q.device.type)
 
         attn = (q @ k.transpose(-2, -1)) * self.scale
         if mask is not None:
-            attn = attn.masked_fill(~mask.bool(), torch.tensor(-1e3, dtype=torch.float16)) # mask
+            mask = mask.to(q.device)
+            attn = attn.masked_fill(~mask.bool(), torch.finfo(attn.dtype).min)
         attn = attn.softmax(dim=-1)
-        attn = torch.mul(attn, mask) ###
+        if mask is not None:
+            attn = torch.mul(attn, mask)
         attn = self.attn_drop(attn)
 
         x = (attn @ v).transpose(1, 2).reshape(B, N, C)
@@ -105,7 +105,8 @@ class Attention(nn.Module):
         # then normalized with softmax.
         attn = (q @ k.transpose(-2, -1)) * self.scale
         if mask is not None:
-            attn = attn.masked_fill(~mask.bool(), torch.tensor(-1e3, dtype=torch.float16)) # mask
+            mask = mask.to(q.device)
+            attn = attn.masked_fill(~mask.bool(), torch.finfo(attn.dtype).min)
         attn = attn.softmax(dim=-1)
         
         # Dropout is applied to the attention weights.
@@ -187,7 +188,12 @@ class HybridEmbed(nn.Module):
                 training = backbone.training
                 if training:
                     backbone.eval()
-                o = self.backbone(torch.zeros(1, in_chans, img_size[0], img_size[1]))
+                try:
+                    backbone_device = next(backbone.parameters()).device
+                except StopIteration:
+                    backbone_device = torch.device("cpu")
+                sample = torch.zeros(1, in_chans, img_size[0], img_size[1], device=backbone_device)
+                o = self.backbone(sample)
                 if isinstance(o, (list, tuple)):
                     o = o[-1]  # last feature if backbone outputs list/tuple of features
                 feature_size = o.shape[-2:]

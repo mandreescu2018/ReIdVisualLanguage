@@ -38,11 +38,17 @@ class ProcessorStandard(ProcessorBase):
             inputs = tuple(batch[i].to(self.device) for i in self.config.INPUT.TRAIN_KEYS)
             target = batch[1].to(self.device)
 
-            with amp.autocast(self.device):
+            if self.device == "cpu":
                 outputs = self.model(*inputs)
                 loss = self.loss_fn(outputs, target)
-            self.scaler.scale(loss).backward()
-            self.scaler.step(self.optimizer)
+                loss.backward()
+                self.optimizer.step()
+            else:
+                with amp.autocast(self.device):
+                    outputs = self.model(*inputs)
+                    loss = self.loss_fn(outputs, target)
+                self.scaler.scale(loss).backward()
+                self.scaler.step(self.optimizer)
 
             if self.optimizer_center is not None:
                 center_loss_item = next(

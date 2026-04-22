@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from config import cfg
 from datasets import ReIDDataLoader
-from losses import LossComposer
+from losses import ComposedLosses
 from models import ModelLoader
 from processors.processor_standard import ProcessorStandard
 from solver import LearningRateScheduler
@@ -62,7 +62,7 @@ def main():
     model = model_loader.model
 
     # Losses
-    composed_loss = LossComposer(cfg)
+    composed_loss = ComposedLosses(cfg)
     model_loader.center_criterion = composed_loss.center_criterion
     if model_loader.center_criterion is not None:
         model_loader.optimizer_center = torch.optim.SGD(

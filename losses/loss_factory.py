@@ -1,5 +1,5 @@
 import torch.nn as nn
-from .triplet_loss import TripletLoss #, TripletLossMatcher
+from .triplet_loss import TripletLoss
 from .softmax_loss import CrossEntropyLabelSmooth
 from .center_loss import CenterLoss
 
@@ -13,9 +13,6 @@ class BaseLoss:
         self.margin = cfg.get("margin", None)
         self.loss = None
     
-    # @property
-    # def loss(self):
-    #     raise NotImplementedError
 
     def __call__(self, outputs, target):
         return self.compute(outputs, target) * self.weight
@@ -27,12 +24,6 @@ class CenterLossWrap(BaseLoss):
         self.feature_dim = feature_dim
         self.loss = CenterLoss(self.num_classes, self.feature_dim)
     
-    # @property
-    # def loss(self):
-    #     if self._loss == None:
-    #         self._loss = CenterLoss(self.num_classes, self.feature_dim)
-    #     return self._loss
-    
     def compute(self, outputs, target):
         feat = outputs[self.output_index]
         return self.loss(feat, target) * self.weight
@@ -41,16 +32,6 @@ class TripletLossWrap(BaseLoss):
     def __init__(self, cfg) -> None:
         super().__init__(cfg)
         self.loss = TripletLoss(self.margin)     
-    
-    # def loss(self):
-    #     if self._loss == None:
-    #         self._loss = TripletLoss(self.margin)
-    #     return self._loss
-    # @property
-    # def loss(self):
-    #     if self._loss == None:
-    #         self._loss = TripletLoss(self.margin)
-    #     return self._loss
     
     def compute(self, outputs, target):
         feat = outputs[self.output_index]
@@ -61,24 +42,6 @@ class TripletLossWrap(BaseLoss):
         else:
             loss = self.loss(feat, target)[0]
         return loss * self.weight
-
-# class TripletLossMatcherWrap(BaseLoss):
-#     def __init__(self, cfg) -> None:
-#         super().__init__(cfg)
-#         self.loss = TripletLossMatcher(self.margin)
-    
-#     # @property
-#     # def loss(self):
-#     #     if self._loss == None:
-#     #         self._loss = TripletLossMatcher(self.margin)
-#     #     return self._loss
-
-#     def compute(self, outputs, target):
-#         if isinstance(outputs, tuple):
-#             score = outputs[self.output_index]
-#         else:
-#             score = outputs
-#         return self.loss(score, target)
 
 class CrossEntropyLossWrap(BaseLoss):
     def __init__(self, cfg, num_classes) -> None:
@@ -93,14 +56,6 @@ class CrossEntropyLossWrap(BaseLoss):
         else:
             self.loss = nn.CrossEntropyLoss()
 
-    # @property
-    # def loss(self):
-    #     if self._loss == None:
-    #         if  self.label_smooth == 'on':
-    #             self._loss = CrossEntropyLabelSmooth(self.num_classes)
-    #         else:
-    #             self._loss = nn.CrossEntropyLoss()
-    #     return self._loss
 
     def compute(self, outputs, target):
         if isinstance(outputs, tuple):
@@ -135,16 +90,14 @@ class LossFactory:
             return TripletLossWrap(loss_conf)
         elif loss_conf["type"] == "center":
             return CenterLossWrap(loss_conf, num_classes, feature_dim)
-        # elif loss_conf["type"] == "triplet_matcher":
-        #     return TripletLossMatcherWrap(loss_conf)
         else:
             raise ValueError(f"Unsupported loss type: {loss_conf['type']}")
     
 
-class LossComposer:
+class ComposedLosses:
     def __init__(self, cfg):
         """
-        Initialize the LossComposer with configuration object.
+        Initialize the ComposedLosses with configuration object.
         
         Args:
             cfg : Configuration yacs object.
