@@ -30,7 +30,7 @@ import torch.nn.functional as F
 import collections.abc as container_abcs
 
 # from config.constants import *
-from .transformer_parts import Mlp_ReID, PatchEmbed_overlap, HybridEmbed, Attention, DropPath
+from .transformer_parts import Mlp, PatchEmbed_overlap, HybridEmbed, Attention, DropPath
 from utils.weight_utils import init_weights, trunc_normal
 
 to_2tuple = nn.modules.utils._ntuple(2)
@@ -49,7 +49,7 @@ class TransformerEncoderBlock(nn.Module):
         # NOTE: drop path for stochastic depth, we shall see if this is better than dropout here
         self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
         self.norm2 = norm_layer(embedding_dim)
-        self.mlp = Mlp_ReID(transformer_config)
+        self.mlp = Mlp(transformer_config)
 
     def forward(self, x):
         x = x + self.drop_path(self.attn(self.norm1(x)))
@@ -183,7 +183,7 @@ class TransReID(nn.Module):
         return x
 
     def load_param(self, model_path):
-        param_dict = torch.load(model_path, map_location='cpu')
+        param_dict = torch.load(model_path, map_location='cpu', weights_only=False)
         if 'model' in param_dict:
             param_dict = param_dict['model']
         if 'state_dict' in param_dict:

@@ -15,7 +15,7 @@ def save_checkpoint(path: str, epoch: int, model, optimizer, scheduler, metrics:
 
 
 def load_checkpoint(path: str, model, optimizer=None, scheduler=None, device="cpu") -> dict:
-    ckpt = torch.load(path, map_location=device)
+    ckpt = torch.load(path, map_location=device, weights_only=False)
     model.load_state_dict(ckpt["model"], strict=False)
     if optimizer and "optimizer" in ckpt:
         optimizer.load_state_dict(ckpt["optimizer"])

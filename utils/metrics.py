@@ -130,8 +130,9 @@ class R1_mAP_eval():
             print('=> Computing DistMat with euclidean_distance')
             distmat = euclidean_distance(qf, gf)
         cmc, mAP = eval_func(distmat, q_pids, g_pids, q_camids, g_camids)
-
-        return cmc, mAP, distmat, self.pids, self.camids, qf, gf
+        return cmc, mAP
+        # return cmc, mAP, distmat, self.pids, self.camids, qf, gf
+    
 
 
 

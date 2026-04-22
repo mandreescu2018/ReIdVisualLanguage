@@ -10,25 +10,27 @@ from config.constants import *
 class ImageFeatureTrainer(BaseTrainer):
 
     def train(self):
-         super(ImageFeatureTrainer, self).train()         
+        super(ImageFeatureTrainer, self).train()         
          
 
-         for epoch in range(self.start_epoch+1, self.max_epochs+1):
-                
-                self.live_values.reset_metrics()
+        for epoch in range(self.start_epoch+1, self.max_epochs+1):
+            
+            self.live_values.reset_metrics()
 
-                self.scheduler.step(epoch)
+            self.scheduler.step(epoch)
 
-                self.live_values.current_start_time = time.time()
-                self.live_values.current_epoch = epoch
+            self.live_values.current_start_time = time.time()
+            self.live_values.current_epoch = epoch
 
-                self.train_step()       
-                self.on_epoch_end()
-                
-                if epoch % self.config.SOLVER.EVAL_PERIOD == 0 or epoch == 1:
-                    self.validation_step()
-                if epoch % self.config.SOLVER.CHECKPOINT_PERIOD == 0:
-                    self.save_model(os.path.join(self.config.OUTPUT_DIR, self.config.MODEL.NAME + '_resume_{}.pth'.format(epoch))) 
+            self.train_step()       
+            self.on_epoch_end()
+            
+            if epoch % self.config.SOLVER.EVAL_PERIOD == 0 or epoch == 1:
+                self.validation_step()
+            if epoch % self.config.SOLVER.CHECKPOINT_PERIOD == 0:
+                self.save_model(os.path.join(self.config.OUTPUT_DIR, self.config.MODEL.NAME + '_resume_{}.pth'.format(epoch)))
+
+        self.on_training_end() 
                 
 
     @timed

@@ -1,6 +1,6 @@
 import os
 import torch
-from torch import amp
+import torch.amp as amp
 from dataclasses import dataclass, field
 from utils.device_manager import DeviceManager
 from .metrics_values import MetricsLiveValues
@@ -10,12 +10,12 @@ from config.constants import *
 
 @dataclass
 class TrainerConfig:
-    model = None
-    train_loader = None
-    val_loader = None
-    optimizer = None
-    scheduler = None
-    loss_fn = None
+    model: torch.nn.Module = None
+    train_loader: torch.utils.data.DataLoader = None
+    val_loader: torch.utils.data.DataLoader = None
+    optimizer: torch.optim.Optimizer = None
+    scheduler: object = None
+    loss_fn: object = None
     start_epoch: int = 0
 
 class BaseTrainer:
@@ -44,7 +44,7 @@ class BaseTrainer:
     
     def model_evaluation(self):
         self.model.eval()
-        for n_iter, batch in enumerate(self.val_loader):
+        for _, batch in enumerate(self.val_loader):
             with torch.no_grad():
 
                 pid = batch[PID_INDEX]
@@ -60,7 +60,7 @@ class BaseTrainer:
                 feat = outputs[0] if isinstance(outputs, (list, tuple)) else outputs
                 self.live_values.evaluator.update((feat, pid, camid))
         
-        cmc, mAP, _, _, _, _, _ = self.live_values.evaluator.compute()
+        cmc, mAP = self.live_values.evaluator.compute()
         
         self.live_values.mAP = mAP
         self.live_values.cmc = cmc
@@ -76,8 +76,6 @@ class BaseTrainer:
 
     def zero_grading(self):
         self.optimizer.zero_grad()
-        # if self.optimizer_center is not None:
-        #     self.optimizer_center.zero_grad()
 
     def inference(self):        
         self.live_values.reset_metrics()
@@ -86,13 +84,16 @@ class BaseTrainer:
         self.composite_logger.info('Inference Results')
         self.composite_logger.log_validation(self.live_values)
 
-    # LOGGING
+    def on_training_end(self):
+        self.composite_logger.info('Training finished')
+        torch.save(self.model, os.path.join(self.config.OUTPUT_DIR, self.config.MODEL.NAME + '_model_full.pth'))
+
     def on_epoch_end(self):
         """Log epoch end data and send to tensorboard and wandb."""
         self.live_values.learning_rate = self.optimizer.param_groups[0]['lr']      
         self.composite_logger.on_epoch_end(self.live_values)  
     
-    
+    # LOGGING
     def log_training_details(self, n_iter):
         if (n_iter + 1) % self.config.SOLVER.LOG_PERIOD == 0:
             status_msg = f"Epoch[{self.live_values.current_epoch}] "
@@ -114,8 +115,3 @@ class BaseTrainer:
                 'scheduler_state_dict': self.scheduler.state_dict(),
                 }, path)
         
-        if self.live_values.current_epoch == self.max_epochs:
-            torch.save(self.model, os.path.join(self.config.OUTPUT_DIR, self.config.MODEL.NAME + '_model_full.pth'))
-            # sscripted_model = torch.jit.script(self.model)
-            # sscripted_model.save(os.path.join(self.config.OUTPUT_DIR, self.config.MODEL.NAME + '_scritped_model_full.pt'))
-    

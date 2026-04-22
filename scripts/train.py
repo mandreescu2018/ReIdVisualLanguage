@@ -12,8 +12,6 @@ from pathlib import Path
 
 import torch
 
-
-
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from config import cfg
@@ -88,9 +86,7 @@ def main():
     trainer_cfg.start_epoch = model_loader.start_epoch
     
     # Train on images
-    image_trainer = ImageFeatureTrainer(cfg,
-        trainer_cfg
-    )
+    image_trainer = ImageFeatureTrainer(cfg, trainer_cfg)
     image_trainer.train()
 
 

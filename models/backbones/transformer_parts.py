@@ -215,7 +215,7 @@ class HybridEmbed(nn.Module):
         x = self.proj(x).flatten(2).transpose(1, 2)
         return x
 
-class Mlp_ReID(nn.Module):
+class Mlp(nn.Module):
     def __init__(self,
                  transformer_config,
                  out_features=None,
@@ -238,32 +238,6 @@ class Mlp_ReID(nn.Module):
         x = self.fc2(x)
         x = self.drop(x)
         return x
-
-# The original ViT paper ("An Image is Worth 16x16 Words") from Google does use dropout in the MLP.
-# However, some minimal implementations omit dropout after GELU for simplicity or regularization tuning purposes.
-# Different ViT variants (like DeiT, Swin Transformer, etc.) vary in how they structure the MLP: 
-# sometimes using dropout only once, or not at all.
-class Mlp(nn.Module):
-    def __init__(self,
-                 in_features,
-                 hidden_features=None,
-                 out_features=None,
-                 drop=0.,
-                 embedding_dim=VIT_BASE_HIDDEN_SIZE):
-        super().__init__()
-
-        self.layer_norm = nn.LayerNorm(embedding_dim)
-        self.mlp = nn.Sequential(
-            nn.Linear(in_features, hidden_features),
-            nn.GELU(),
-            nn.Dropout(drop),
-            nn.Linear(hidden_features, out_features),
-            nn.Dropout(drop)
-        )
-
-    def forward(self, x):
-        return self.mlp(self.layer_norm(x))
-    
 class MultiHeadSelfAttentionBlock(nn.Module):
     """
     MultiHeadSelfAttentionBlock is a block that contains a multi-head self-attention mechanism.

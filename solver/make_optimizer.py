@@ -62,51 +62,6 @@ class OptimizerBase(ABC):
             self.params.append({"params": [value], "lr": lr, "weight_decay": weight_decay})
     
 
-class SGD_QACONV_Optimizer(OptimizerBase):
-    """
-    Interpretable and Generalizable Person Re-Identification with Query-Adaptive Convolution and Temporal Lifting:
-    https://arxiv.org/abs/1904.10424
-    5.1 ...The SGD optimizer is applied, with a learning rate of 0.001 for the backbone network, and 0.01 for
-    newly added layers."""
-
-    def __init__(self, cfg, model, matcher):
-        super().__init__(cfg, model)
-        self.matcher = matcher        
-        
-    def _get_base_params(self):
-        return self.model.base.parameters()
-
-    def _get_new_params(self, base_params):
-        base_param_ids = set(map(id, base_params))
-        return [p for p in self.model.parameters() if id(p) not in base_param_ids]
-
-    def _get_matcher_params(self):
-        return self.matcher.parameters()
-
-    def _get_params(self):
-        base_params = self._get_base_params()
-        new_params = self._get_new_params(base_params)
-        matcher_params = self._get_matcher_params()
-
-        base_param_ids = set(map(id, self.model.base.parameters()))
-        
-        new_params = [p for p in self.model.parameters() if
-                    id(p) not in base_param_ids]
-        
-        self.params = [
-            {'params': self.model.base.parameters(), 'lr': 0.1 * self.base_learning_rate},
-            {'params': new_params, 'lr': self.base_learning_rate},
-            {'params': self.matcher.parameters(), 'lr': self.base_learning_rate}
-        ]
-    
-    def get_optimizer(self):
-        self._get_params()
-        return torch.optim.SGD(self.params, 
-                               lr=self.base_learning_rate, 
-                               momentum=self.momentum, 
-                               weight_decay=self.base_weight_decay , nesterov=True)
-
-
 class Adam_Optimizer(OptimizerBase):
     
     def get_optimizer(self):
@@ -133,7 +88,6 @@ class OptimizerFactory:
     _optimizer_classes = {
         "SGD": SGD_Optimizer,
         "Adam": Adam_Optimizer,
-        "SGD_QACONV": SGD_QACONV_Optimizer,
         "adamw": AdamW_Optimizer
     }
      

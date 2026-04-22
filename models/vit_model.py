@@ -92,7 +92,7 @@ class vit_builder_base(nn.Module):
 class build_transformer(vit_builder_base):
     def __init__(self, cfg):
         super(build_transformer, self).__init__(cfg)
-        # self.gap = nn.AdaptiveAvgPool2d(1) - unnecessary ?
+        self.gap = nn.AdaptiveAvgPool2d(1) # - unnecessary ?
         
         self.ID_LOSS_TYPE = cfg.LOSS.ID_LOSS_TYPE
 

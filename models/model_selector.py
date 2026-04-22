@@ -1,4 +1,5 @@
 import torch
+from collections.abc import Mapping
 from .vit_model import build_transformer, build_transformer_local
 # from .vit_model_vanilla import build_transformer_vanilla
 # from .backbones.mobilenet_v2 import MobileNetV2
@@ -42,9 +43,11 @@ class ModelLoader:
         if self._checkpoint is None:
             map_location = DeviceManager.get_device()
             if self.cfg.MODEL.PRETRAIN_CHOICE == 'resume':
-                self._checkpoint = torch.load(self.cfg.MODEL.PRETRAIN_PATH, map_location=map_location)
+                # Keep compatibility with legacy checkpoints containing pickled objects.
+                self._checkpoint = torch.load(self.cfg.MODEL.PRETRAIN_PATH, map_location=map_location, weights_only=False)
             elif self.cfg.MODEL.PRETRAIN_CHOICE == 'test' or self.cfg.MODEL.PRETRAIN_CHOICE == 'cross_domain':
-                self._checkpoint = torch.load(self.cfg.TEST.WEIGHT, map_location=map_location, weights_only=True)
+                # Keep compatibility with legacy checkpoints containing pickled objects.
+                self._checkpoint = torch.load(self.cfg.TEST.WEIGHT, map_location=map_location, weights_only=False)
         return self._checkpoint
 
     @property
@@ -97,15 +100,28 @@ class ModelLoader:
                 continue
             self.model.state_dict()[i].copy_(param_dict[i])
 
+    @staticmethod
+    def _extract_model_state_dict(checkpoint):
+        if isinstance(checkpoint, Mapping):
+            if 'model_state_dict' in checkpoint:
+                return checkpoint['model_state_dict']
+            return checkpoint
+        if hasattr(checkpoint, 'state_dict'):
+            return checkpoint.state_dict()
+        return checkpoint
+
     def load_param(self):
         model = self.model
+        checkpoint = self.checkpoint
 
         if self.cfg.MODEL.PRETRAIN_CHOICE == 'resume':
-            model.load_state_dict(self.checkpoint['model_state_dict'])
+            model_state_dict = self._extract_model_state_dict(checkpoint)
+            model.load_state_dict(model_state_dict)
             if self._optimizer is not None:
-                self._optimizer.load_state_dict(self.checkpoint['optimizer_state_dict'])
-            optimizer_center_state_dict = self.checkpoint.get('optimizer_center_state_dict', None)
-            center_criterion_state_dict = self.checkpoint.get('center_criterion_state_dict', None)
+                if isinstance(checkpoint, Mapping) and 'optimizer_state_dict' in checkpoint:
+                    self._optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            optimizer_center_state_dict = checkpoint.get('optimizer_center_state_dict', None) if isinstance(checkpoint, Mapping) else None
+            center_criterion_state_dict = checkpoint.get('center_criterion_state_dict', None) if isinstance(checkpoint, Mapping) else None
             if (
                 optimizer_center_state_dict is not None
                 and center_criterion_state_dict is not None
@@ -115,18 +131,13 @@ class ModelLoader:
                 self._optimizer_center.load_state_dict(optimizer_center_state_dict)
                 self._center_criterion.load_state_dict(center_criterion_state_dict)
             if self._scheduler is not None:
-                self._scheduler.load_state_dict(self.checkpoint['scheduler_state_dict'])
+                if isinstance(checkpoint, Mapping) and 'scheduler_state_dict' in checkpoint:
+                    self._scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
         elif self.cfg.MODEL.PRETRAIN_CHOICE == 'test':
-            if 'model_state_dict' not in self.checkpoint:
-                model.load_state_dict(self.checkpoint)
-            else:
-                model.load_state_dict(self.checkpoint['model_state_dict'])
+            model.load_state_dict(self._extract_model_state_dict(checkpoint))
             # self.model.load_state_dict(self.checkpoint)
         elif self.cfg.MODEL.PRETRAIN_CHOICE == 'cross_domain':
-            if 'model_state_dict' not in self.checkpoint:
-                self.load_param_cross(self.checkpoint)
-            else:
-                self.load_param_cross(self.checkpoint['model_state_dict'])
+            self.load_param_cross(self._extract_model_state_dict(checkpoint))
             # self.load_param_cross(self.checkpoint)
             
         
