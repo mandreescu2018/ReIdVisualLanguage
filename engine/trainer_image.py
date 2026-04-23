@@ -22,7 +22,7 @@ class ImageFeatureTrainer(BaseTrainer):
             self.live_values.current_start_time = time.time()
             self.live_values.current_epoch = epoch
 
-            self.train_step()       
+            self._run_epoch()
             self.on_epoch_end()
             
             if epoch % self.config.SOLVER.EVAL_PERIOD == 0 or epoch == 1:
@@ -34,7 +34,7 @@ class ImageFeatureTrainer(BaseTrainer):
                 
 
     @timed
-    def train_step(self):
+    def _run_epoch(self):
         self.model.train()
         for n_iter, batch in enumerate(self.train_loader):
             self.zero_grading()

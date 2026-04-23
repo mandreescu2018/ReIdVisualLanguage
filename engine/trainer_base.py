@@ -1,12 +1,11 @@
 import os
 import torch
 import torch.amp as amp
-from dataclasses import dataclass, field
-from utils.device_manager import DeviceManager
+from dataclasses import dataclass
+from utils import DeviceManager, timed
 from .metrics_values import MetricsLiveValues
 from functional_logging import CompositeLogger
 from config.constants import *
-
 
 @dataclass
 class TrainerConfig:
@@ -39,7 +38,7 @@ class BaseTrainer:
     def train(self):
         self.composite_logger.info('Start training')
 
-    def train_step(self):
+    def _run_epoch(self):
         pass
     
     def model_evaluation(self):
@@ -67,6 +66,7 @@ class BaseTrainer:
 
         return cmc, mAP
 
+    @timed
     def validation_step(self):
         cmc, mAP = self.model_evaluation()
         
@@ -77,6 +77,7 @@ class BaseTrainer:
     def zero_grading(self):
         self.optimizer.zero_grad()
 
+    @timed
     def inference(self):        
         self.live_values.reset_metrics()
         cmc, mAP = self.model_evaluation()
