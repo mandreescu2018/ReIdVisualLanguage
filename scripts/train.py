@@ -14,7 +14,7 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from config import cfg
+from config import cfg, load_config
 from datasets import ReIDDataLoader
 from losses import ComposedLosses
 from models import ModelLoader
@@ -35,7 +35,7 @@ def main():
     args = parser.parse_args()
 
     if args.config_file:
-        cfg.merge_from_file(args.config_file)
+        load_config(args.config_file)
 
     DeviceManager.set_device(cfg.MODEL.DEVICE)
     set_seeds(cfg.SOLVER.SEED)

@@ -138,7 +138,10 @@ _C.DATASETS.ROOT_DIR = 'D:\datasets'
 # folder where images are stored
 _C.DATASETS.DIR = ('market1501')
 # _C.DATASETS.TEST = None
-
+_C.DATASETS.NUMBER_OF_CLASSES = 0
+_C.DATASETS.NUMBER_OF_CAMERAS = 0
+_C.DATASETS.NUMBER_OF_TRACKS = 0
+_C.DATASETS.NUMBER_OF_IMAGES_IN_QUERY = 0
 
 # -----------------------------------------------------------------------------
 # DataLoader
@@ -189,7 +192,7 @@ _C.SOLVER.BASE_LR = 3e-4
 _C.SOLVER.LARGE_FC_LR = False
 # Factor of learning bias
 _C.SOLVER.BIAS_LR_FACTOR = 1
-# Factor of learning bias
+# seed for initializing training.
 _C.SOLVER.SEED = 1234
 # Momentum
 _C.SOLVER.MOMENTUM = 0.9
@@ -238,7 +241,6 @@ _C.SOLVER.FEATURE_DIMENSION = 2048
 _C.LOSS = CN()
 
 # metric loss
-_C.LOSS.METRIC_LOSS_TYPE = 'triplet'
 # output tensor index
 _C.LOSS.METRIC_LOSS_OUTPUT_INDEX = 1
 # Id loss type, options: 'softmax','triplet'
@@ -253,13 +255,6 @@ _C.LOSS.COMPONENTS = [
     {"type": "triplet", "weight": 1.0, "output_index": 1, "margin": None},
     {"type": "center", "weight": 0.0005, "output_index": 1},
 ]
-
-# ---------------------------------------------------------------------------- #
-# PROCESSOR
-# ---------------------------------------------------------------------------- #
-_C.PROCESSOR = CN()
-_C.PROCESSOR.TARGET_KEY = 1
-_C.PROCESSOR.IMAGE_KEY = 0
 
 # ---------------------------------------------------------------------------- #
 # TEST

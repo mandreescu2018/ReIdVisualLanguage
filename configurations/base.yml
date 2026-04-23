@@ -1,4 +1,11 @@
-_base_: '../base.yml'
+MODEL:
+  PRETRAIN_CHOICE: 'imagenet'
+  PRETRAIN_PATH: './weights_pretrained/jx_vit_base_p16_224-80ecf9dd.pth'
+  # PRETRAIN_PATH: './logs/market_vit_base/vit_transformer_resume_110.pth'
+  NAME: 'vit_transformer'
+  TRANSFORMER:
+    TYPE: 'vit_base_patch16_224_TransReID'
+  
 
 SOLVER:
   OPTIMIZER_NAME: 'SGD'
@@ -12,7 +19,6 @@ SOLVER:
   WEIGHT_DECAY:  1e-4
   WEIGHT_DECAY_BIAS: 1e-4
   BIAS_LR_FACTOR: 2
-  SEED: 1234
   # decay rate of learning rate
   # GAMMA: 0.1
   # WARMUP_FACTOR: 0.01
