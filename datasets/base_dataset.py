@@ -1,12 +1,18 @@
 import os.path as osp
+from abc import ABC, abstractmethod
 
-class BaseDataset(object):
+class BaseDataset(ABC):
     
     def __init__(self) -> None:
         self._dataset_dir = None
         self._train_dir = None
         self._query_dir = None
         self._gallery_dir = None
+
+    @abstractmethod
+    def _process_dir(self, dir_path, relabel=False):
+        """Process the directory to create a dataframe with columns: img_path, pid, camid, trackid"""
+        pass
 
     def get_imagedata_info(self, dataframe):
         """

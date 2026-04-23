@@ -47,7 +47,7 @@ def main():
 
     # Data
     data_loaders = ReIDDataLoader(cfg)
-    train_loader = data_loaders.train_dataloader
+    train_loader = data_loaders.train_loader
     test_loader  = data_loaders.val_loader
 
     cfg.DATASETS.NUMBER_OF_CLASSES          = data_loaders.num_classes

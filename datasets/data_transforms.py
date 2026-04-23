@@ -30,7 +30,7 @@ class TransformsManager:
 
     def create_transforms(self, transform, test=False):
 
-        transform_name = transform['tranform']
+        transform_name = transform['transform']
 
         if transform_name == 'resize':
             input_size = self.config.INPUT.SIZE_TEST if test else self.config.INPUT.SIZE_TRAIN

@@ -51,14 +51,11 @@ class DukeMTMCreID(BaseDataset):
         img_paths = glob.glob(osp.join(dir_path, '*.jpg'))
         
         df = pd.DataFrame(img_paths, columns=['img_path'])
-        df['img_path'] = df['img_path'].apply(lambda x: osp.relpath(x, dir_path))
-        df['pid'] = df['img_path'].apply(lambda x: int(x.split('_')[0]))
+        df['pid'] = df['img_path'].apply(lambda x: int(osp.basename(x).split('_')[0]))
         
         # Extract camera ID from the image path
-        df['camid'] = df['img_path'].apply(lambda x: int(x.split('_')[1][1]))
-        
-        # Update image paths to include the directory path
-        df['img_path'] = df['img_path'].apply(lambda x: osp.join(dir_path, x))
+        # df['camid'] = df['img_path'].apply(lambda x: int(osp.basename(x).split('_')[1][1]))
+        df['camid'] = df['img_path'].apply(lambda x: int(re.search(r'_c(\d+)_', osp.basename(x)).group(1)))
         
         # Adjust PID and camera ID
         df['camid'] -= 1
@@ -68,7 +65,7 @@ class DukeMTMCreID(BaseDataset):
             df['pid'] = df['pid'].map(pid2label)
 
         df['pid'] += self.pid_begin
-        # Add a trackid column with default value 1
-        df['trackid'] = 1          
+        # Add a trackid column with default value 0
+        df['trackid'] = 0     
         
         return df

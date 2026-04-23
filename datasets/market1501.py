@@ -1,17 +1,12 @@
 import os
 import glob
 import re
-from torch.utils.data import Dataset
 from .base_dataset import BaseDataset
-
-
-import os
-import glob
-import re
 import pandas as pd
 
 class Market1501(BaseDataset):
     def __init__(self, cfg, verbose=True, pid_begin=0):
+        super(Market1501, self).__init__()
         self.dataset_dir = os.path.join(cfg.DATASETS.ROOT_DIR, cfg.DATASETS.DIR)
         self.train_dir = os.path.join(self.dataset_dir, 'bounding_box_train')
         self.query_dir = os.path.join(self.dataset_dir, 'query')
@@ -42,7 +37,6 @@ class Market1501(BaseDataset):
                 data.append((img_path, pid, camid))
 
         df = pd.DataFrame(data, columns=['img_path', 'pid', 'camid'])
-        df = df[df['pid'] != -1]  # Remove junk images
         df['camid'] -= 1  # index starts from 0
 
         if relabel:

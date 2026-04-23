@@ -1,48 +1,16 @@
-import os
-from functools import partial
-
 import torch
 from torch.utils.data import DataLoader
-import torchvision
-import torchvision.transforms as T
-import datasets
 from .market1501 import Market1501
-# from .msmt17_prototype import MSMT17_Prototype
-# from .occ_duke_prototype import OCC_DukeMTMCreID
-# from .dukemtmcreid import DukeMTMCreID
+from .dukemtmcreid import DukeMTMCreID
 from .image_dataset import ImageDataset
 from .data_transforms import TransformsManager
 from .sampler import RandomIdentitySampler
 import pandas as pd
 
-
-
-class CustomCollate:
-    
-    def __init__(self, cfg):
-       
-        self.stack_imgs = partial(torch.stack, dim=0)
-        self.config = cfg
-
-    def apply_transform(self, object, image=False):
-        if image:
-            return self.stack_imgs(object)
-        else:
-            return torch.tensor(object, dtype=torch.int64)
-
-    def collate_fn(self, batch):
-        imgs, pids, camids, viewids = zip(*batch)
-        return (
-            self.apply_transform(imgs, image=True),
-            self.apply_transform(pids),
-            self.apply_transform(camids),
-            self.apply_transform(viewids),
-        )
-
 class ReIDDataLoader:
     __factory = {
         'market1501': Market1501,
-        # 'dukemtmc': DukeMTMCreID, 
+        'dukemtmc': DukeMTMCreID,
         # 'msmt17': MSMT17_Prototype, 
         # 'cuhk03': None, # datasets.CUHK03
         # 'occ_duke': OCC_DukeMTMCreID, 
@@ -51,11 +19,24 @@ class ReIDDataLoader:
         self.cfg = cfg
         self._train_dataset = None
         self._validation_dataset = None
+        self._train_loader = None
+        self._val_loader = None
         self.num_workers = cfg.DATALOADER.NUM_WORKERS
         
         self.transforms_manager = TransformsManager(cfg)
-        self.custom_collate = CustomCollate(cfg)
 
+    @staticmethod
+    def collate_fn(batch):
+        imgs, pids, camids, viewids = zip(*batch)
+        
+        imgs = torch.stack(imgs, dim=0)
+        pids = torch.tensor(pids, dtype=torch.int64)        
+        camids = torch.tensor(camids, dtype=torch.int64)
+        viewids = torch.tensor(viewids, dtype=torch.int64)
+
+        return imgs, pids, camids, viewids,
+        
+    
     @property
     def train_dataset(self):
         if self._train_dataset is None:
@@ -65,10 +46,7 @@ class ReIDDataLoader:
     @property
     def validation_set(self):
         if self._validation_dataset is None:
-            if self.cfg.DATASETS.TEST is not None:
-                val_set = ReIDDataLoader.__factory[self.cfg.DATASETS.TEST](self.cfg)
-            else:
-                val_set = self.train_dataset
+            val_set = self.train_dataset            
             self._validation_dataset = ImageDataset(pd.concat([val_set.query, val_set.gallery], ignore_index=True), self.val_transforms)
         return self._validation_dataset
         
@@ -81,26 +59,29 @@ class ReIDDataLoader:
         return self.transforms_manager.image_test_transforms
 
     @property
-    def train_dataloader(self):
-        train_dataset = ImageDataset(self.train_dataset.train, transform=self.train_transforms)
-        
-        return DataLoader(
-            train_dataset,
-            batch_size=self.cfg.SOLVER.IMS_PER_BATCH,
-            num_workers=self.num_workers,
-            sampler=RandomIdentitySampler(self.train_dataset.train.itertuples(index=False, name=None), self.cfg.SOLVER.IMS_PER_BATCH, self.cfg.DATALOADER.NUM_INSTANCE),
-            collate_fn=self.custom_collate.collate_fn,
-        )
+    def train_loader(self):
+        if self._train_loader is None:
+            train_dataset = ImageDataset(self.train_dataset.train, transform=self.train_transforms)
+            self._train_loader = DataLoader(
+                train_dataset,
+                batch_size=self.cfg.SOLVER.IMS_PER_BATCH,
+                num_workers=self.num_workers,
+                sampler=RandomIdentitySampler(self.train_dataset.train.itertuples(index=False, name=None), self.cfg.SOLVER.IMS_PER_BATCH, self.cfg.DATALOADER.NUM_INSTANCE),
+                collate_fn=ReIDDataLoader.collate_fn,
+            )
+        return self._train_loader
 
     @property
     def val_loader(self):
-        return DataLoader(
-            self.validation_set, 
-            batch_size=self.cfg.TEST.IMS_PER_BATCH, 
-            shuffle=False,   
-            num_workers=self.num_workers,
-            collate_fn=self.custom_collate.collate_fn
-        )
+        if self._val_loader is None:
+            self._val_loader = DataLoader(
+                self.validation_set, 
+                batch_size=self.cfg.TEST.IMS_PER_BATCH, 
+                shuffle=False,   
+                num_workers=self.num_workers,
+                collate_fn=ReIDDataLoader.collate_fn,
+            )
+        return self._val_loader
 
     @property
     def num_classes(self):
