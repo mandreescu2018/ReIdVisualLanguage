@@ -5,7 +5,7 @@ import argparse
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from config import cfg
+from config import cfg, load_config, save_resolved_config
 from utils import set_seeds
 from datasets import ReIDDataLoader
 # from datasets.make_dataloader_trans import make_dataloader
@@ -23,7 +23,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.config_file:
-        cfg.merge_from_file(args.config_file)
+        load_config(args.config_file)
+        save_resolved_config(cfg, args.config_file)
     set_seeds(cfg.SOLVER.SEED)
 
     # Data

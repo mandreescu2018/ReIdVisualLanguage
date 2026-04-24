@@ -47,7 +47,7 @@ INPUT:
 DATALOADER:
   SAMPLER: 'softmax_triplet'
   NUM_INSTANCE: 4
-  NUM_WORKERS: 8
+  NUM_WORKERS: 4
   TRAIN_TRANSFORMS: [
     {'transform':'resize'},
     {'transform':'random_horizontal_flip', 'prob': 0.5},

@@ -18,7 +18,7 @@ _C.MODEL = CN()
 # Using cuda or cpu for training
 _C.MODEL.DEVICE = "cuda"
 # ID number of GPU
-_C.MODEL.DEVICE_ID = '0'
+_C.MODEL.DEVICE_ID = 0
 # Name of backbone
 _C.MODEL.NAME = 'resnet50'
 # Last stride of backbone
@@ -69,17 +69,6 @@ _C.MODEL.TRAIN_STRATEGY = '' # ['multiview', 'chunk']
 _C.MODEL.SPATIAL = False
 _C.MODEL.TEMPORAL = False
 _C.MODEL.FREEZE = False
-_C.MODEL.PYRAMID0_TYPE = ''
-_C.MODEL.PYRAMID1_TYPE = ''
-_C.MODEL.PYRAMID2_TYPE = ''
-_C.MODEL.PYRAMID3_TYPE = ''
-_C.MODEL.PYRAMID4_TYPE = ''
-_C.MODEL.LAYER_COMBIN = 1
-_C.MODEL.LAYER0_DIVISION_TYPE = 'NULL'
-_C.MODEL.LAYER1_DIVISION_TYPE = 'NULL'
-_C.MODEL.LAYER2_DIVISION_TYPE = 'NULL'
-_C.MODEL.LAYER3_DIVISION_TYPE = 'NULL'
-_C.MODEL.LAYER4_DIVISION_TYPE = 'NULL'
 _C.MODEL.DIVERSITY = False
 
 # if the model is a transformer
@@ -92,9 +81,6 @@ _C.MODEL.TRANSFORMER.TYPE = 'vit_base_patch16_224_TransReID'
 _C.MODEL.TRANSFORMER.ATTN_TYPE = "multihead"
 _C.MODEL.TRANSFORMER.MLP_TYPE = "standard"
 _C.MODEL.TRANSFORMER.QKV_BIAS = None
-
-
-
 
 # -----------------------------------------------------------------------------
 # INPUT
@@ -134,7 +120,7 @@ _C.DATASETS = CN()
 _C.DATASETS.NAMES = ('market1501')
 # Root directory where datasets should be used (and downloaded if not found)
 # _C.DATASETS.ROOT_DIR = '/home/Datasets'
-_C.DATASETS.ROOT_DIR = 'D:\datasets'
+_C.DATASETS.ROOT_DIR = 'E:/datasets'
 # folder where images are stored
 _C.DATASETS.DIR = ('market1501')
 # _C.DATASETS.TEST = None
@@ -291,7 +277,7 @@ _C.LOGGING.WANDB_PROJECT = "reid"
 # Experiment name in wandb
 _C.LOGGING.WANDB_NAME = "baseline"
 # Run id in wandb
-_C.LOGGING.WANDB_RUN_ID = "00000"
+_C.LOGGING.WANDB_RUN_ID = 0
 # Whether to use tensorboard
 _C.LOGGING.TENSORBOARD_USE = True
 
