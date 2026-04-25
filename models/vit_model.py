@@ -34,15 +34,16 @@ def shuffle_unit(features, shift, group, begin=1):
     return x
 
 class vit_builder_base(nn.Module):
-    def __init__(self, cfg):
+    def __init__(self, cfg, ds_info=None):
         super().__init__()
         self.config = cfg
         self.neck = cfg.MODEL.NECK
         self.neck_feat = cfg.TEST.NECK_FEAT
+        self.ds_info = ds_info
 
         self.transformer_config = TransformerConfig(cfg)
         self.in_planes = self.transformer_config.hidden_size
-        self.num_classes = cfg.DATASETS.NUMBER_OF_CLASSES
+        # self.num_classes = ds_info.num_classes
 
         print(f'using Transformer_type: {cfg.MODEL.TRANSFORMER_TYPE} as a backbone'.format())
 
@@ -72,26 +73,26 @@ class vit_builder_base(nn.Module):
         
         if self.config.LOSS.ID_LOSS_TYPE in ('arcface', 'cosface', 'amsoftmax', 'circle'):
             self.classifier = id_loss_factory[self.config.LOSS.ID_LOSS_TYPE](in_planes, 
-                                                                             self.config.DATASETS.NUMBER_OF_CLASSES, 
+                                                                             self.ds_info.num_classes, 
                                                                              s=self.config.SOLVER.COSINE_SCALE, 
                                                                              m=self.config.SOLVER.COSINE_MARGIN)        
         else:
             # Initialize multiple linear classifiers for local features
             if num_classifiers == 1:
-                self.classifier = nn.Linear(in_planes, self.num_classes, bias=False)
+                self.classifier = nn.Linear(in_planes, self.ds_info.num_classes, bias=False)
                 self.classifier.apply(weights_init_classifier)
             else:
                 classifiers = []
                 for _ in range(num_classifiers):
-                    classifier = nn.Linear(self.in_planes, self.num_classes, bias=False)
+                    classifier = nn.Linear(self.in_planes, self.ds_info.num_classes, bias=False)
                     classifier.apply(weights_init_classifier)
                     classifiers.append(classifier)
                 self.classifier, self.classifier_1, self.classifier_2, self.classifier_3, self.classifier_4 = classifiers
 
 
 class build_transformer(vit_builder_base):
-    def __init__(self, cfg):
-        super(build_transformer, self).__init__(cfg)
+    def __init__(self, cfg, ds_info=None):
+        super(build_transformer, self).__init__(cfg, ds_info)
         # self.gap = nn.AdaptiveAvgPool2d(1) # - unnecessary ?
         
         self.ID_LOSS_TYPE = cfg.LOSS.ID_LOSS_TYPE
@@ -120,8 +121,8 @@ class build_transformer(vit_builder_base):
                 return global_feat
 
 class build_transformer_local(vit_builder_base):
-    def __init__(self, cfg):
-        super(build_transformer_local, self).__init__(cfg=cfg)
+    def __init__(self, cfg, ds_info=None):
+        super(build_transformer_local, self).__init__(cfg=cfg, ds_info=ds_info)
 
         block = self.base.blocks[-1]
         layer_norm = self.base.norm

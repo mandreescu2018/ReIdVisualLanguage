@@ -1,1 +1,1 @@
-from .make_dataloader import ReIDDataLoader
+from .make_dataloader import ReIDDataLoader, DatasetInfo

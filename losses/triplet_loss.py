@@ -131,7 +131,8 @@ class TripletLoss(object):
     """
 
     def __init__(self, margin=None, hard_factor=0.0):
-        self.margin = None if margin == "None" else margin
+        # self.margin = None if margin == "null" else margin
+        self.margin = margin
         self.hard_factor = hard_factor
         if self.margin is not None:
             self.ranking_loss = nn.MarginRankingLoss(margin=margin)

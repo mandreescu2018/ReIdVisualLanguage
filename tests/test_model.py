@@ -33,7 +33,6 @@ def vit_cfg():
     test_cfg.MODEL.DROP_PATH = 0.0
     test_cfg.MODEL.DROP_OUT = 0.0
     test_cfg.MODEL.ATT_DROP_RATE = 0.0
-    test_cfg.DATASETS.NUMBER_OF_CLASSES = NUM_CLASSES
     test_cfg.DATASETS.NUMBER_OF_CAMERAS = 0
     test_cfg.DATASETS.NUMBER_OF_TRACKS = 0
     test_cfg.TEST.NECK_FEAT = "before"

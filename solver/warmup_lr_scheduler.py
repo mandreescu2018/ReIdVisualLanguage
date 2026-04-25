@@ -12,7 +12,7 @@ class WarmupMultiStepLR(torch.optim.lr_scheduler.LRScheduler):
         self.milestones: List[int] = cfg.SOLVER.STEPS
         self.gamma: float = cfg.SOLVER.GAMMA
         self.warmup_factor: float = cfg.SOLVER.WARMUP_FACTOR
-        self.warmup_iters: int = cfg.SOLVER.WARMUP_ITERS
+        self.warmup_epochs: int = cfg.SOLVER.WARMUP_EPOCHS
         self.warmup_method: str = cfg.SOLVER.WARMUP_METHOD
         self._check_scheduler_params()
         super(WarmupMultiStepLR, self).__init__(optimizer, last_epoch)
@@ -39,11 +39,11 @@ class WarmupMultiStepLR(torch.optim.lr_scheduler.LRScheduler):
         ]
 
     def _get_warmup_factor(self) -> float:
-        if self.last_epoch < self.warmup_iters:
+        if self.last_epoch < self.warmup_epochs:
             if self.warmup_method == "constant":
                 return self.warmup_factor
             elif self.warmup_method == "linear":
-                alpha = self.last_epoch / self.warmup_iters
+                alpha = self.last_epoch / self.warmup_epochs
                 return self.warmup_factor * (1 - alpha) + alpha
         return 1.0
 

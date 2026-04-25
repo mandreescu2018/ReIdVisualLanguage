@@ -104,12 +104,13 @@ class LossFactory:
     
 
 class ComposedLosses:
-    def __init__(self, cfg):
+    def __init__(self, cfg, ds_info):
         """
         Initialize the ComposedLosses with configuration object.
         
         Args:
             cfg : Configuration yacs object.
+            ds_info : DatasetInfo object containing dataset statistics.
         """
         self.config = cfg
         self._center_criterion = None
@@ -117,7 +118,7 @@ class ComposedLosses:
         self.loss_functions = []
 
         loss_configs  = cfg.LOSS.COMPONENTS
-        num_classes = cfg.DATASETS.NUMBER_OF_CLASSES
+        num_classes = ds_info.num_classes
         feature_dim = cfg.SOLVER.FEATURE_DIMENSION
         
 

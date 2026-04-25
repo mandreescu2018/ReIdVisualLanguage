@@ -62,7 +62,7 @@ class CosineScheduler(SchedulerStrategy):
         # lr_min = 0.001 * cfg.SOLVER.BASE_LR
         # warmup_lr_init = 0.01 * cfg.SOLVER.BASE_LR
 
-        warmup_t = self.config.SOLVER.WARMUP_ITERS
+        warmup_t = self.config.SOLVER.WARMUP_EPOCHS
         noise_range = None
 
         return CosineLRScheduler(

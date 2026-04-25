@@ -2,8 +2,8 @@
 scripts/train.py — training entry point.
 
 Usage:
-    python scripts/train.py --config configurations/Market/vit_base.yml
-    python scripts/train.py --config configurations/Market/vit_base.yml --resume checkpoints/reid_last.pth
+    python scripts/train.py --config_file configurations/Market/vit_base.yml
+    python scripts/train.py --config_file configurations/Market/vit_base.yml --resume checkpoints/reid_last.pth
 """
 
 import argparse
@@ -15,7 +15,7 @@ import torch
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from config import cfg, load_config, save_resolved_config
-from datasets import ReIDDataLoader
+from datasets import ReIDDataLoader, DatasetInfo
 from losses import ComposedLosses
 from models import ModelLoader
 from engine import ImageFeatureTrainer, TrainerConfig
@@ -51,17 +51,19 @@ def main():
     train_loader = data_loaders.train_loader
     test_loader  = data_loaders.val_loader
 
-    cfg.DATASETS.NUMBER_OF_CLASSES          = data_loaders.num_classes
-    cfg.DATASETS.NUMBER_OF_CAMERAS          = data_loaders.cameras_number
-    cfg.DATASETS.NUMBER_OF_TRACKS           = data_loaders.track_view_num
-    cfg.DATASETS.NUMBER_OF_IMAGES_IN_QUERY  = data_loaders.query_num
+    dataset_info = DatasetInfo(
+        num_classes=data_loaders.num_classes,
+        cameras_number=data_loaders.cameras_number,
+        track_view_num=data_loaders.track_view_num,
+        query_num=data_loaders.query_num
+    )
 
     # Model
-    model_loader = ModelLoader(cfg)
+    model_loader = ModelLoader(cfg, ds_info=dataset_info)
     model = model_loader.model
 
     # Losses
-    composed_loss = ComposedLosses(cfg)
+    composed_loss = ComposedLosses(cfg, dataset_info)
     model_loader.center_criterion = composed_loss.center_criterion
     if model_loader.center_criterion is not None:
         model_loader.optimizer_center = torch.optim.SGD(
@@ -77,17 +79,18 @@ def main():
     model_loader.scheduler = scheduler
     model_loader.load_param()
 
-    trainer_cfg = TrainerConfig()
-    trainer_cfg.model = model
-    trainer_cfg.train_loader = train_loader
-    trainer_cfg.val_loader = test_loader
-    trainer_cfg.optimizer = optimizer
-    trainer_cfg.scheduler = scheduler
-    trainer_cfg.loss_fn = composed_loss
-    trainer_cfg.start_epoch = model_loader.start_epoch
-    
+    trainer_cfg = TrainerConfig(
+        model=model,
+        train_loader=train_loader,
+        val_loader=test_loader,
+        optimizer=optimizer,
+        scheduler=scheduler,
+        loss_fn=composed_loss,
+        start_epoch=model_loader.start_epoch,
+    )
+
     # Train on images
-    image_trainer = ImageFeatureTrainer(cfg, trainer_cfg)
+    image_trainer = ImageFeatureTrainer(cfg, trainer_cfg, ds_info=dataset_info)
     image_trainer.train()
 
 

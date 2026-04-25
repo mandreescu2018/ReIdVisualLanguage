@@ -32,8 +32,6 @@ _C.MODEL.PRETRAIN_CHOICE = 'imagenet'
 _C.MODEL.NECK = 'bnneck'
 # If train with multi-gpu ddp mode, options: 'True', 'False'
 _C.MODEL.DIST_TRAIN = False
-# If train with soft triplet loss, options: 'True', 'False'
-_C.MODEL.NO_MARGIN = False
 
 # If train with arcface loss, options: 'True', 'False'
 _C.MODEL.COS_LAYER = False
@@ -64,16 +62,8 @@ _C.MODEL.SIE_COEFFICIENT = 3.0
 _C.MODEL.SIE_CAMERA = False
 _C.MODEL.SIE_VIEW = False
 
-# Sample Strategy
-_C.MODEL.TRAIN_STRATEGY = '' # ['multiview', 'chunk']
-_C.MODEL.SPATIAL = False
-_C.MODEL.TEMPORAL = False
-_C.MODEL.FREEZE = False
-_C.MODEL.DIVERSITY = False
-
 # if the model is a transformer
 _C.MODEL.TRANSFORMER = CN()
-_C.MODEL.TRANSFORMER.DROP_PATH = 0.1
 _C.MODEL.TRANSFORMER.NUM_HEADS = None
 _C.MODEL.TRANSFORMER.MLP_RATIO = None
 _C.MODEL.TRANSFORMER.LAYERS = None
@@ -90,12 +80,6 @@ _C.INPUT = CN()
 _C.INPUT.SIZE_TRAIN = [384, 128]
 # Size of the image during test
 _C.INPUT.SIZE_TEST = [384, 128]
-# Random probability for image horizontal flip
-_C.INPUT.HF_PROB = 0.5
-# Random probability for random erasing
-_C.INPUT.RE_PROB = 0.5
-# Random erasing
-_C.INPUT.RE = True
 # Values to be used for image normalization
 _C.INPUT.PIXEL_MEAN = [0.485, 0.456, 0.406]
 # Values to be used for image normalization
@@ -120,14 +104,10 @@ _C.DATASETS = CN()
 _C.DATASETS.NAMES = ('market1501')
 # Root directory where datasets should be used (and downloaded if not found)
 # _C.DATASETS.ROOT_DIR = '/home/Datasets'
-_C.DATASETS.ROOT_DIR = 'E:/datasets'
+_C.DATASETS.ROOT_DIR = 'D:/datasets'
 # folder where images are stored
 _C.DATASETS.DIR = ('market1501')
 # _C.DATASETS.TEST = None
-_C.DATASETS.NUMBER_OF_CLASSES = 0
-_C.DATASETS.NUMBER_OF_CAMERAS = 0
-_C.DATASETS.NUMBER_OF_TRACKS = 0
-_C.DATASETS.NUMBER_OF_IMAGES_IN_QUERY = 0
 
 # -----------------------------------------------------------------------------
 # DataLoader
@@ -141,12 +121,6 @@ _C.DATALOADER.SAMPLER = 'softmax'
 _C.DATALOADER.NUM_INSTANCE = 16
 # random select p persons for each sample
 _C.DATALOADER.P = 16
-# random select k tracklets for each person
-_C.DATALOADER.K = 8
-# random select 8 images of each tracklet for test
-_C.DATALOADER.NUM_TEST_IMAGES = 8
-# random select 8 images of each tracklet for train
-_C.DATALOADER.NUM_TRAIN_IMAGES = 8
 
 _C.DATALOADER.TRAIN_TRANSFORMS = [
     {'transform':'resize'}, 
@@ -203,7 +177,7 @@ _C.SOLVER.WARMUP_FACTOR = 0.01
 # method of warm up, option: 'constant','linear'
 _C.SOLVER.WARMUP_METHOD = "linear"
 # iterations of warm up
-_C.SOLVER.WARMUP_ITERS = 0
+_C.SOLVER.WARMUP_EPOCHS = 0
 
 _C.SOLVER.COSINE_MARGIN = 0.5
 _C.SOLVER.COSINE_SCALE = 30
@@ -226,16 +200,16 @@ _C.SOLVER.FEATURE_DIMENSION = 2048
 # ---------------------------------------------------------------------------- #
 _C.LOSS = CN()
 
-# metric loss
-# output tensor index
-_C.LOSS.METRIC_LOSS_OUTPUT_INDEX = 1
-# Id loss type, options: 'softmax','triplet'
+# Classifier type — also controls which head vit_model builds.
+# Options: 'cross_entropy', 'arcface', 'cosface', 'amsoftmax', 'circle'
 _C.LOSS.ID_LOSS_TYPE = 'cross_entropy'
-# output tensor index
+# Output index used by metrics to extract logits for accuracy tracking.
 _C.LOSS.ID_LOSS_OUTPUT_INDEX = 0
 
-# name, weight, output_index 
-# If train with label smooth, options: 'on', 'off'
+# Each entry: type, weight, output_index, plus type-specific keys.
+# cross_entropy: label_smooth ('on'/'off')
+# triplet:       margin (float or null for soft-margin)
+# center:        (no extra keys)
 _C.LOSS.COMPONENTS = [
     {"type": "cross_entropy", "weight": 1.0, "output_index": 0, "label_smooth": "off"},
     {"type": "triplet", "weight": 1.0, "output_index": 1, "margin": None},

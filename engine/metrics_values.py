@@ -3,11 +3,11 @@ from utils.metrics import R1_mAP_eval
 
 
 class MetricsLiveValues:
-    def __init__(self, cfg):
+    def __init__(self, cfg, ds_info):
         self.config = cfg
         self.acc_meter = AverageMeter()
         self.loss_meter = AverageMeter()
-        self.evaluator = R1_mAP_eval(cfg.DATASETS.NUMBER_OF_IMAGES_IN_QUERY, max_rank=50, feat_norm=cfg.TEST.FEAT_NORM)
+        self.evaluator = R1_mAP_eval(ds_info.query_num, max_rank=50, feat_norm=cfg.TEST.FEAT_NORM)
         self.current_epoch = 0
         self.learning_rate = 0
         self.train_loader_length = 0

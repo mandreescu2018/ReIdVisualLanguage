@@ -18,7 +18,10 @@ class TrainerConfig:
     start_epoch: int = 0
 
 class BaseTrainer:
-    def __init__(self, cfg, train_cfg: TrainerConfig):               
+    def __init__(self, 
+                 cfg, 
+                 train_cfg: TrainerConfig,
+                 ds_info=None):               
         self.config = cfg
         self.model = train_cfg.model      
         self.train_loader = train_cfg.train_loader
@@ -30,7 +33,7 @@ class BaseTrainer:
 
         self.max_epochs = cfg.SOLVER.MAX_EPOCHS
         self.device = DeviceManager.get_device().type
-        self.live_values = MetricsLiveValues(cfg)
+        self.live_values = MetricsLiveValues(cfg, ds_info)
         self.live_values.train_loader_length = len(train_cfg.train_loader)
         self.composite_logger = CompositeLogger(cfg)
         self.scaler = amp.GradScaler(self.device)

@@ -28,8 +28,9 @@ model_factory = {
 }
 
 class ModelLoader:
-    def __init__(self, cfg):
+    def __init__(self, cfg, ds_info=None):
         self.cfg = cfg
+        self.ds_info = ds_info
         self._model = None
         self._start_epoch = 0
         self._optimizer = None
@@ -52,8 +53,8 @@ class ModelLoader:
 
     @property
     def model(self):
-        if self._model is None:            
-            self._model = model_factory[self.cfg.MODEL.NAME](self.cfg).to(DeviceManager.get_device())
+        if self._model is None:
+            self._model = model_factory[self.cfg.MODEL.NAME](self.cfg, self.ds_info).to(DeviceManager.get_device())
         return self._model
 
     @property

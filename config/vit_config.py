@@ -9,21 +9,24 @@ class TransformerConfig:
     transformer_factory = {
         'vit_base_patch16_224_TransReID': {'num_heads': VIT_BASE_HEADS, 
                                            'num_layers': VIT_BASE_LAYERS, 
+                                           'hidden_size': VIT_BASE_HIDDEN_SIZE,
                                            'mlp_ratio': 4.0, 
                                            'qkv_bias': True},
         'vit_small_patch16_224_TransReID': {'num_heads': VIT_SMALL_HEADS, 
-                                            'num_layers': VIT_SMALL_LAYERS, 
+                                            'num_layers': VIT_SMALL_LAYERS,
+                                            'hidden_size': VIT_BASE_HIDDEN_SIZE,
                                             'mlp_ratio': 3.0, 
                                             'qkv_bias': False},
         'deit_small_patch16_224_TransReID': {'num_heads': DEIT_HEADS, 
                                              'num_layers': VIT_BASE_LAYERS, 
+                                             'hidden_size': 384,
                                              'mlp_ratio': 4.0, 
                                              'qkv_bias': True},
     }
     def __init__(self, cfg):
         self.config = cfg
         self._img_size = None
-        self._hidden_size = VIT_BASE_HIDDEN_SIZE
+        self._hidden_size = None
         
     @property
     def camera(self):
@@ -61,8 +64,8 @@ class TransformerConfig:
     
     @property
     def hidden_size(self):
-        if self.config.MODEL.TRANSFORMER.TYPE == 'deit_small_patch16_224_TransReID':
-            self._hidden_size = 384
+        if self._hidden_size is None:
+            self._hidden_size = self.transformer_factory[self.config.MODEL.TRANSFORMER.TYPE]['hidden_size']        
         return self._hidden_size
     
     @property

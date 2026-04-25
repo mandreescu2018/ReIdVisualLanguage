@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 import torch
 from torch.utils.data import DataLoader
 from .market1501 import Market1501
@@ -6,6 +8,13 @@ from .image_dataset import ImageDataset
 from .data_transforms import TransformsManager
 from .sampler import RandomIdentitySampler
 import pandas as pd
+
+@dataclass
+class DatasetInfo:
+        num_classes: int = 0
+        cameras_number: int = 0
+        track_view_num: int = 0
+        query_num: int = 0        
 
 class ReIDDataLoader:
     __factory = {

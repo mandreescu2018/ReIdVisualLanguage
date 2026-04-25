@@ -7,8 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from config import cfg, load_config, save_resolved_config
 from utils import set_seeds
-from datasets import ReIDDataLoader
-# from datasets.make_dataloader_trans import make_dataloader
+from datasets import ReIDDataLoader, DatasetInfo
 from models import ModelLoader
 from engine import ImageFeatureTrainer, TrainerConfig
 
@@ -32,24 +31,26 @@ if __name__ == '__main__':
     train_loader = data_loaders.train_loader
     test_loader  = data_loaders.val_loader
 
-    cfg.DATASETS.NUMBER_OF_CLASSES          = data_loaders.num_classes
-    cfg.DATASETS.NUMBER_OF_CAMERAS          = data_loaders.cameras_number
-    cfg.DATASETS.NUMBER_OF_TRACKS           = data_loaders.track_view_num
-    cfg.DATASETS.NUMBER_OF_IMAGES_IN_QUERY  = data_loaders.query_num
+    dataset_info = DatasetInfo(
+        num_classes=data_loaders.num_classes,
+        cameras_number=data_loaders.cameras_number,
+        track_view_num=data_loaders.track_view_num,
+        query_num=data_loaders.query_num
+    )
 
-    
     # Model
     cfg.MODEL.PRETRAIN_CHOICE = 'test'
-    model_loader = ModelLoader(cfg)
+    model_loader = ModelLoader(cfg, ds_info=dataset_info)
     model_loader.load_param()
     
-    trainer_config = TrainerConfig(cfg)
-    trainer_config.model = model_loader.model
-    trainer_config.train_loader = train_loader
-    trainer_config.val_loader = test_loader
+    trainer_config = TrainerConfig(
+        model = model_loader.model,
+        train_loader = train_loader,
+        val_loader = test_loader
+    )
     
     
-    trainer = ImageFeatureTrainer(cfg, trainer_config)
+    trainer = ImageFeatureTrainer(cfg, trainer_config, ds_info=dataset_info)
     start = time.perf_counter()
     
     trainer.inference()

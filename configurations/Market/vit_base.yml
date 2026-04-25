@@ -2,16 +2,11 @@ _base_: '../base.yml'
 
 DATASETS:
   NAMES: market1501
-  DIR: 'Market-1501-v15.09.15'
+  DIR: 'market1501'
 
-TEST:
-  EVAL: True
-  IMS_PER_BATCH: 256
-  RE_RANKING: False
+TEST:  
   # WEIGHT: './logs/market_vit_base/vit_transformer_resume_120.pth'
-  WEIGHT: 'D:/work/ReID_projects/ReIdPrototype/logs/market_vit_base/vit_transformer_model_full.pth'
-  NECK_FEAT: 'before'
-  FEAT_NORM: 'yes'
+  WEIGHT: 'D:/work/ReID_projects/ReIdPrototype/logs/market_vit_base/vit_transformer_model_full.pth'  
 
 LOGGING: 
   WANDB_USE: False

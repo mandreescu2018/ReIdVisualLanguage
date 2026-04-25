@@ -22,16 +22,15 @@ SOLVER:
   # decay rate of learning rate
   # GAMMA: 0.1
   # WARMUP_FACTOR: 0.01
-  WARMUP_ITERS: 5
+  WARMUP_EPOCHS: 5
   WARMUP_METHOD: 'linear'
 
 LOSS:
   ID_LOSS_TYPE: 'cross_entropy'
   ID_LOSS_OUTPUT_INDEX: 0
-  METRIC_LOSS_OUTPUT_INDEX: 1
   COMPONENTS: [
     {"type": "cross_entropy", "weight": 1.0, "output_index": 0, "label_smooth": "off"},
-    {"type": "triplet", "weight": 1.0, "output_index": 1, "margin": None},
+    {"type": "triplet", "weight": 1.0, "output_index": 1, "margin": null},
   ]
 
 INPUT:
@@ -64,24 +63,10 @@ DATALOADER:
       {'transform':'normalize'}, 
       ]
 
-DATASETS:
-  NAMES: market1501
-  DIR: 'market1501'
-
 TEST:
   EVAL: True
   IMS_PER_BATCH: 256
   RE_RANKING: False
-  # WEIGHT: './logs/market_vit_base/vit_transformer_resume_120.pth'
-  WEIGHT: 'D:/work/ReID_projects/ReIdPrototype/logs/market_vit_base/vit_transformer_model_full.pth'
   NECK_FEAT: 'before'
   FEAT_NORM: 'yes'
-
-LOGGING: 
-  WANDB_USE: False
-  WANDB_PROJECT: 'transformer_vit_market_base'
-  WANDB_NAME: 'market_vit_base'
-OUTPUT_DIR: './logs/market_vit_base_test'
-# EXPERIMENT_NAME: 'vit_base_market_norm_imgnet_close'
-EXPERIMENT_NAME: 'vit_base_market'
 

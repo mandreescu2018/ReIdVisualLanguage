@@ -18,7 +18,7 @@ def build_cfg(args):
     cfg.SOLVER.BASE_LR = args.base_lr
     cfg.SOLVER.MAX_EPOCHS = args.epochs
     cfg.SOLVER.SCHEDULER = args.scheduler
-    cfg.SOLVER.WARMUP_ITERS = args.warmup_iters
+    cfg.SOLVER. WARMUP_EPOCHS = args.warmup_epochs
     cfg.SOLVER.WARMUP_FACTOR = args.warmup_factor
     cfg.SOLVER.WARMUP_METHOD = "linear"
     cfg.SOLVER.GAMMA = args.gamma
@@ -45,7 +45,7 @@ def main():
     parser.add_argument("--base_lr", type=float, default=3e-4)
     parser.add_argument("--scheduler", type=str, default="cosine",
                         choices=["cosine", "cosine_annealing", "step", "exponential", "warm_up"])
-    parser.add_argument("--warmup_iters", type=int, default=10,
+    parser.add_argument("--warmup_epochs", type=int, default=10,
                         help="Warmup epochs (used by cosine and warm_up schedulers)")
     parser.add_argument("--warmup_factor", type=float, default=0.01,
                         help="Starting LR = base_lr * warmup_factor")
@@ -67,9 +67,9 @@ def main():
 
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.plot(epochs, lrs, label=f"LR — {args.scheduler}")
-    if args.warmup_iters > 0 and args.scheduler in ("cosine", "warm_up"):
-        ax.axvline(args.warmup_iters, color="gray", linestyle=":",
-                   linewidth=1, label=f"Warmup end (epoch {args.warmup_iters})")
+    if args.warmup_epochs > 0 and args.scheduler in ("cosine", "warm_up"):
+        ax.axvline(args.warmup_epochs, color="gray", linestyle=":",
+                   linewidth=1, label=f"Warmup end (epoch {args.warmup_epochs})")
     if args.scheduler in ("step", "warm_up"):
         for s in args.steps:
             ax.axvline(s, color="red", linestyle="--", linewidth=1, alpha=0.5, label=f"Step @ {s}")
