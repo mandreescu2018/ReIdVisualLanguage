@@ -5,7 +5,7 @@ from .vit_model import build_transformer, build_transformer_local
 # from .backbones.mobilenet_v2 import MobileNetV2
 # from .resnet_CBN import ResNetBuilder
 # from .simple_model import SimpleReIDModel
-# from .resnet_BoT import BagOfTricksBuilder
+from .resnet_BoT import BagOfTricksBuilder
 # from .hacnn_model import HACNNBuilder
 # from .QAConv import QAConvBuilder
 # from .vit_pat_model import build_part_attention_vit
@@ -18,7 +18,7 @@ model_factory = {
     # 'vit_transformer_pytorch': build_transformer_vanilla,
     # 'vit_transformer_jpm': build_transformer_local,
     # 'mobilenet_v2': MobileNetV2,
-    # 'resnet50': BagOfTricksBuilder,
+    'resnet50': BagOfTricksBuilder,
     # 'qaconv': QAConvBuilder,
     # 'simple_resnet50': SimpleReIDModel,
     # 'hacnn': HACNNBuilder,

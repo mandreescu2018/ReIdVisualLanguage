@@ -1,0 +1,22 @@
+_base_: '../base.yml'
+
+MODEL:
+  PRETRAIN_CHOICE: 'imagenet'
+  PRETRAIN_PATH: './weights_pretrained/resnet50-19c8e357.pth'  
+  NAME: 'resnet50'
+
+DATASETS:
+  NAMES: market1501
+  DIR: 'market1501'
+
+TEST:  
+  # WEIGHT: './logs/market_vit_base/vit_transformer_resume_120.pth'
+  WEIGHT: 'D:/work/ReID_projects/ReIdPrototype/logs/market_vit_base/vit_transformer_model_full.pth'  
+
+LOGGING: 
+  WANDB_USE: False
+  WANDB_PROJECT: 'resnet_market_base'
+  WANDB_NAME: 'resnet_market_base'
+OUTPUT_DIR: './logs/resnet_market'
+# EXPERIMENT_NAME: 'resnet_base_market_norm_imgnet_close'
+EXPERIMENT_NAME: 'resnet_base_market'

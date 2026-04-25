@@ -86,10 +86,6 @@ _C.INPUT.PIXEL_MEAN = [0.485, 0.456, 0.406]
 _C.INPUT.PIXEL_STD = [0.229, 0.224, 0.225]
 # Value of padding size
 _C.INPUT.PADDING = 10
-# indexes of data provided by train dataloader
-_C.INPUT.TRAIN_KEYS = [0, 1, 2, 3]
-# indexes of data provided by validation dataloader
-_C.INPUT.EVAL_KEYS = [0, 1, 2, 3]
 # index of person id in dataset
 _C.INPUT.PERSON_ID_KEY = 1
 # index of camera id in dataset

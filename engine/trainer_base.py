@@ -2,6 +2,7 @@ import os
 import torch
 import torch.amp as amp
 from dataclasses import dataclass
+from models.model_io import ModelInput
 from utils import DeviceManager, timed
 from .metrics_values import MetricsLiveValues
 from functional_logging import CompositeLogger
@@ -49,18 +50,14 @@ class BaseTrainer:
         for _, batch in enumerate(self.val_loader):
             with torch.no_grad():
 
-                pid = batch[PID_INDEX]
-                camid = batch[CAMID_INDEX]
-                inputs = []
-                for item in self.config.INPUT.EVAL_KEYS:
-                    if item != 'NaN':
-                        inputs.append(batch[item].to(self.device))
-                    else:
-                        inputs.append(None)
-                
-                outputs = self.model(*inputs)
+                inputs = ModelInput(images=batch[IMG_INDEX].to(self.device),
+                                labels=batch[PID_INDEX].to(self.device),
+                                cam_ids=batch[CAMID_INDEX].to(self.device),
+                                view_ids=batch[VIEWID_INDEX].to(self.device)
+                                ) 
+                outputs = self.model(inputs)
                 feat = outputs[0] if isinstance(outputs, (list, tuple)) else outputs
-                self.live_values.evaluator.update((feat, pid, camid))
+                self.live_values.evaluator.update((feat, inputs.labels.cpu(), inputs.cam_ids.cpu()))
         
         cmc, mAP = self.live_values.evaluator.compute()
         

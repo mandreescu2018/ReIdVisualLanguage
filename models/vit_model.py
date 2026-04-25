@@ -6,7 +6,7 @@ from config.vit_config import TransformerConfig
 from losses.metric_learning import Arcface, Cosface, AMSoftmax, CircleLoss
 from utils.weight_utils import weights_init_classifier, weights_init_kaiming
 from .backbones.vit_pytorch import TransReID
-from .model_output import ModelOutput
+from .model_io import ModelOutput
 
 id_loss_factory = {
     'arcface': Arcface,
@@ -101,14 +101,16 @@ class build_transformer(vit_builder_base):
         self._init_classifier_layers(num_classifiers=1)  # Initialize classifier layers
         self._init_bottleneck_layers(num_layers=1)  # Initialize bottleneck layers
 
-    def forward(self, x, label=0, cam_label= 0, view_label=0):
-        global_feat = self.base(x, cam_label=cam_label, view_label=view_label)
+    def forward(self, inp):
+    # def forward(self, x, label=0, cam_label= 0, view_label=0):
+        # global_feat = self.base(x, cam_label=cam_label, view_label=view_label)
+        global_feat = self.base(inp.images, cam_label=inp.cam_ids, view_label=inp.view_ids)
 
         feat = self.bottleneck(global_feat)
 
         if self.training:
             if self.ID_LOSS_TYPE in ('arcface', 'cosface', 'amsoftmax', 'circle'):
-                cls_score = self.classifier(feat, label)
+                cls_score = self.classifier(feat, inp.labels)
             else:
                 cls_score = self.classifier(feat)
             return ModelOutput(logits=cls_score, features=global_feat)
@@ -143,9 +145,9 @@ class build_transformer_local(vit_builder_base):
         print(f'using divide_length size:{self.divide_length}')
         self.rearrange = cfg.MODEL.RE_ARRANGE
 
-    def forward(self, x, label=None, cam_label= None, view_label=None):  # label is unused if self.cos_layer == 'no'
+    def forward(self, inp):  # label is unused if self.cos_layer == 'no'
 
-        features = self.base(x, cam_label=cam_label, view_label=view_label)
+        features = self.base(inp.images, cam_label=inp.cam_ids, view_label=inp.view_ids)
 
         # global branch
         b1_feat = self.b1(features) # [64, 129, 768]
@@ -189,7 +191,7 @@ class build_transformer_local(vit_builder_base):
 
         if self.training:
             if self.ID_LOSS_TYPE in ('arcface', 'cosface', 'amsoftmax', 'circle'):
-                cls_score = self.classifier(feat, label)
+                cls_score = self.classifier(feat, inp.labels)
             else:
                 cls_score = self.classifier(feat)
                 cls_score_1 = self.classifier_1(local_feat_1_bn)

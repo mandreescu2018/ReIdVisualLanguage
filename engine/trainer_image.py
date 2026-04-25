@@ -6,6 +6,7 @@ from utils import timed
 import time
 import os
 from config.constants import *
+from models import ModelInput
 
 class ImageFeatureTrainer(BaseTrainer):
 
@@ -39,23 +40,26 @@ class ImageFeatureTrainer(BaseTrainer):
         for n_iter, batch in enumerate(self.train_loader):
             self.zero_grading()
 
-            inputs = tuple(batch[i].to(self.device) for i in self.config.INPUT.TRAIN_KEYS)
-            target = batch[PID_INDEX].to(self.device)
+            inputs = ModelInput(images=batch[IMG_INDEX].to(self.device),
+                                labels=batch[PID_INDEX].to(self.device),
+                                cam_ids=batch[CAMID_INDEX].to(self.device),
+                                view_ids=batch[VIEWID_INDEX].to(self.device)
+                                ) 
 
             if self.device == "cpu":
-                outputs = self.model(*inputs)
-                loss = self.loss_fn(outputs, target)
+                outputs = self.model(inputs)
+                loss = self.loss_fn(outputs, inputs.labels)
                 loss.backward()
                 self.optimizer.step()
             else:
                 with amp.autocast(self.device):
-                    outputs = self.model(*inputs)
-                    loss = self.loss_fn(outputs, target)
+                    outputs = self.model(inputs)
+                    loss = self.loss_fn(outputs, inputs.labels)
                 self.scaler.scale(loss).backward()
                 self.scaler.step(self.optimizer)
                 self.scaler.update()
 
-            self.live_values.update(loss, outputs, target)
+            self.live_values.update(loss, outputs, inputs.labels)
             self.log_training_details(n_iter)
             
 
