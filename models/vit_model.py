@@ -6,6 +6,7 @@ from config.vit_config import TransformerConfig
 from losses.metric_learning import Arcface, Cosface, AMSoftmax, CircleLoss
 from utils.weight_utils import weights_init_classifier, weights_init_kaiming
 from .backbones.vit_pytorch import TransReID
+from .model_output import ModelOutput
 
 id_loss_factory = {
     'arcface': Arcface,
@@ -110,15 +111,9 @@ class build_transformer(vit_builder_base):
                 cls_score = self.classifier(feat, label)
             else:
                 cls_score = self.classifier(feat)
-
-            return cls_score, global_feat  # global feature for triplet loss
+            return ModelOutput(logits=cls_score, features=global_feat)
         else:
-            if self.neck_feat == 'after':
-                # print("Test with feature after BN")
-                return feat
-            else:
-                # print("Test with feature before BN")
-                return global_feat
+            return feat if self.neck_feat == 'after' else global_feat
 
 class build_transformer_local(vit_builder_base):
     def __init__(self, cfg, ds_info=None):
@@ -201,10 +196,10 @@ class build_transformer_local(vit_builder_base):
                 cls_score_2 = self.classifier_2(local_feat_2_bn)
                 cls_score_3 = self.classifier_3(local_feat_3_bn)
                 cls_score_4 = self.classifier_4(local_feat_4_bn)
-            return [cls_score, cls_score_1, cls_score_2, cls_score_3,
-                        cls_score_4
-                        ], [global_feat, local_feat_1, local_feat_2, local_feat_3,
-                            local_feat_4]  # global feature for triplet loss
+            return ModelOutput(
+                logits=[cls_score, cls_score_1, cls_score_2, cls_score_3, cls_score_4],
+                features=[global_feat, local_feat_1, local_feat_2, local_feat_3, local_feat_4],
+            )
         else:
             if self.neck_feat == 'after':
                 return torch.cat(

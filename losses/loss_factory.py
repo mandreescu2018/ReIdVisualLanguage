@@ -5,75 +5,67 @@ from .center_loss import CenterLoss
 
 class BaseLoss:
     def __init__(self, cfg) -> None:
-        self.config = cfg
-        self._loss = None
         self.weight = cfg["weight"]
-        self.output_index = cfg["output_index"]
         self.label_smooth = cfg.get("label_smooth", None)
         self.margin = cfg.get("margin", None)
         self.loss = None
-    
+
     @property
     def is_center_loss(self):
-        """Identify if this loss wrapper manages a center criterion."""
         return False
 
     def __call__(self, outputs, target):
         return self.compute(outputs, target) * self.weight
 
+
 class CenterLossWrap(BaseLoss):
     def __init__(self, cfg, num_classes, feature_dim) -> None:
         super().__init__(cfg)
-        self.num_classes = num_classes
-        self.feature_dim = feature_dim
-        self.loss = CenterLoss(self.num_classes, self.feature_dim)
-    
+        self.loss = CenterLoss(num_classes, feature_dim)
+
     @property
     def is_center_loss(self):
-        """Identify if this loss wrapper manages a center criterion."""
         return True
-    
+
     def compute(self, outputs, target):
-        feat = outputs[self.output_index]
-        return self.loss(feat, target)
+        feat = outputs.features
+        if isinstance(feat, list):
+            loss = [self.loss(f, target) for f in feat[1:]]
+            loss = sum(loss) / len(loss)
+            loss = 0.5 * loss + 0.5 * self.loss(feat[0], target)
+        else:
+            loss = self.loss(feat, target)
+        return loss
+
 
 class TripletLossWrap(BaseLoss):
     def __init__(self, cfg) -> None:
         super().__init__(cfg)
-        self.loss = TripletLoss(self.margin)     
-    
+        self.loss = TripletLoss(self.margin)
+
     def compute(self, outputs, target):
-        feat = outputs[self.output_index]
+        feat = outputs.features
         if isinstance(feat, list):
-            loss = [self.loss(feats, target)[0] for feats in feat[1:]]
+            loss = [self.loss(f, target)[0] for f in feat[1:]]
             loss = sum(loss) / len(loss)
             loss = 0.5 * loss + 0.5 * self.loss(feat[0], target)[0]
         else:
             loss = self.loss(feat, target)[0]
         return loss
 
+
 class CrossEntropyLossWrap(BaseLoss):
     def __init__(self, cfg, num_classes) -> None:
         super().__init__(cfg)
-        self.num_classes = num_classes
-        self.set_loss()
-    
-   
-    def set_loss(self):
         if self.label_smooth == 'on':
-            self.loss = CrossEntropyLabelSmooth(self.num_classes)
+            self.loss = CrossEntropyLabelSmooth(num_classes)
         else:
             self.loss = nn.CrossEntropyLoss()
 
-
     def compute(self, outputs, target):
-        if isinstance(outputs, tuple):
-            score = outputs[self.output_index]
-        else:
-            score = outputs
-            
+        score = outputs.logits if hasattr(outputs, 'logits') else outputs
         if isinstance(score, list):
-            loss = [self.loss(scor, target) for scor in score[1:]]
+            loss = [self.loss(s, target) for s in score[1:]]
             loss = sum(loss) / len(loss)
             loss = 0.5 * loss + 0.5 * self.loss(score[0], target)
         else:
@@ -83,24 +75,15 @@ class CrossEntropyLossWrap(BaseLoss):
 class LossFactory:
     @staticmethod
     def create_loss(loss_conf, num_classes, feature_dim):
-        """
-        Create a loss function instance based on its type.
-
-        Args:
-            loss_conf (dict): losses dict.
-            num_classes (int): number of person ids.
-
-        Returns:
-            An instance of a loss function (BaseLoss or derived class).
-        """
-        if loss_conf["type"] == "cross_entropy":
+        loss_type = loss_conf["type"]
+        if loss_type == "cross_entropy":
             return CrossEntropyLossWrap(loss_conf, num_classes)
-        elif loss_conf["type"] == "triplet":
+        elif loss_type == "triplet":
             return TripletLossWrap(loss_conf)
-        elif loss_conf["type"] == "center":
+        elif loss_type == "center":
             return CenterLossWrap(loss_conf, num_classes, feature_dim)
         else:
-            raise ValueError(f"Unsupported loss type: {loss_conf['type']}")
+            raise ValueError(f"Unsupported loss type: {loss_type}")
     
 
 class ComposedLosses:

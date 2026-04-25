@@ -27,10 +27,9 @@ SOLVER:
 
 LOSS:
   ID_LOSS_TYPE: 'cross_entropy'
-  ID_LOSS_OUTPUT_INDEX: 0
   COMPONENTS: [
-    {"type": "cross_entropy", "weight": 1.0, "output_index": 0, "label_smooth": "off"},
-    {"type": "triplet", "weight": 1.0, "output_index": 1, "margin": null},
+    {"type": "cross_entropy", "weight": 1.0, "label_smooth": "off"},
+    {"type": "triplet", "weight": 1.0, "margin": null},
   ]
 
 INPUT:

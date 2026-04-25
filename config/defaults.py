@@ -203,17 +203,14 @@ _C.LOSS = CN()
 # Classifier type — also controls which head vit_model builds.
 # Options: 'cross_entropy', 'arcface', 'cosface', 'amsoftmax', 'circle'
 _C.LOSS.ID_LOSS_TYPE = 'cross_entropy'
-# Output index used by metrics to extract logits for accuracy tracking.
-_C.LOSS.ID_LOSS_OUTPUT_INDEX = 0
 
-# Each entry: type, weight, output_index, plus type-specific keys.
+# Each entry: type, weight, plus type-specific keys.
 # cross_entropy: label_smooth ('on'/'off')
 # triplet:       margin (float or null for soft-margin)
-# center:        (no extra keys)
 _C.LOSS.COMPONENTS = [
-    {"type": "cross_entropy", "weight": 1.0, "output_index": 0, "label_smooth": "off"},
-    {"type": "triplet", "weight": 1.0, "output_index": 1, "margin": None},
-    {"type": "center", "weight": 0.0005, "output_index": 1},
+    {"type": "cross_entropy", "weight": 1.0, "label_smooth": "off"},
+    {"type": "triplet", "weight": 1.0, "margin": None},
+    {"type": "center", "weight": 0.0005},
 ]
 
 # ---------------------------------------------------------------------------- #

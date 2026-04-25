@@ -29,16 +29,9 @@ class MetricsLiveValues:
         self.acc_meter.update(acc.item(), 1)
     
     def calculate_accuracy(self, outputs, target):
-        index = self.config.LOSS.ID_LOSS_OUTPUT_INDEX if isinstance(outputs, tuple) else None
-        if index is None:
-            id_classifier_output = outputs
-        else:
-            id_classifier_output = outputs[index]
-        # id_classifier_output = outputs[index]
-        id_hat_element = id_classifier_output[0] if isinstance(id_classifier_output, list) else id_classifier_output
-        acc = (id_hat_element.max(1)[1] == target).float().mean()
-
-        return acc 
+        logits = outputs.logits if hasattr(outputs, 'logits') else outputs
+        head = logits[0] if isinstance(logits, list) else logits
+        return (head.max(1)[1] == target).float().mean()
 
 
 
