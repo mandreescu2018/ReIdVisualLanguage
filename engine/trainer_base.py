@@ -56,8 +56,7 @@ class BaseTrainer:
                                 view_ids=batch[VIEWID_INDEX].to(self.device)
                                 ) 
                 outputs = self.model(inputs)
-                feat = outputs[0] if isinstance(outputs, (list, tuple)) else outputs
-                self.live_values.evaluator.update((feat, inputs.labels.cpu(), inputs.cam_ids.cpu()))
+                self.live_values.evaluator.update((outputs, inputs.labels.cpu(), inputs.cam_ids.cpu()))
         
         cmc, mAP = self.live_values.evaluator.compute()
         
