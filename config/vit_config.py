@@ -23,18 +23,19 @@ class TransformerConfig:
                                              'mlp_ratio': 4.0, 
                                              'qkv_bias': True},
     }
-    def __init__(self, cfg):
+    def __init__(self, cfg, ds_info):
         self.config = cfg
+        self.ds_info = ds_info
         self._img_size = None
         self._hidden_size = None
         
     @property
     def camera(self):
-        return self.config.DATASETS.NUMBER_OF_CAMERAS if self.config.MODEL.SIE_CAMERA else 0
+        return self.ds_info.cameras_number if self.config.MODEL.SIE_CAMERA else 0
     
     @property
     def view(self):
-        return self.config.DATASETS.NUMBER_OF_TRACKS if self.config.MODEL.SIE_VIEW else 0
+        return self.ds_info.track_view_num if self.config.MODEL.SIE_VIEW else 0
     
     @property
     def img_size(self):
