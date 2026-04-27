@@ -35,14 +35,14 @@ def shuffle_unit(features, shift, group, begin=1):
     return x
 
 class vit_builder_base(nn.Module):
-    def __init__(self, cfg, ds_info=None):
+    def __init__(self, cfg, ds_info):
         super().__init__()
         self.config = cfg
         self.neck = cfg.MODEL.NECK
         self.neck_feat = cfg.TEST.NECK_FEAT
         self.ds_info = ds_info
 
-        self.transformer_config = TransformerConfig(cfg)
+        self.transformer_config = TransformerConfig(cfg, ds_info)
         self.in_planes = self.transformer_config.hidden_size
         # self.num_classes = ds_info.num_classes
 
