@@ -102,8 +102,6 @@ class build_transformer(vit_builder_base):
         self._init_bottleneck_layers(num_layers=1)  # Initialize bottleneck layers
 
     def forward(self, inp):
-    # def forward(self, x, label=0, cam_label= 0, view_label=0):
-        # global_feat = self.base(x, cam_label=cam_label, view_label=view_label)
         global_feat = self.base(inp.images, cam_label=inp.cam_ids, view_label=inp.view_ids)
 
         feat = self.bottleneck(global_feat)
