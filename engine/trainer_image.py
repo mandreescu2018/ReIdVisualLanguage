@@ -10,6 +10,7 @@ from models import ModelInput
 
 class ImageFeatureTrainer(BaseTrainer):
 
+    @timed
     def train(self):
         super(ImageFeatureTrainer, self).train()         
          
