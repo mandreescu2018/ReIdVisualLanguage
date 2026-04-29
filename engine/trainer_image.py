@@ -12,17 +12,15 @@ class ImageFeatureTrainer(BaseTrainer):
 
     @timed
     def train(self):
-        super(ImageFeatureTrainer, self).train()         
-         
+        super(ImageFeatureTrainer, self).train()
 
         for epoch in range(self.start_epoch+1, self.max_epochs+1):
             
-            self.live_values.reset_metrics()
-
-            self.scheduler.step(epoch)
-
+            self.live_values.reset_metrics()            
             self.live_values.current_start_time = time.time()
             self.live_values.current_epoch = epoch
+            
+            self.scheduler.step(epoch)
 
             self._run_epoch()
             self.on_epoch_end()
